@@ -211,7 +211,8 @@ async function brainStatus() {
 
 let brainCache = null;
 async function cachedBrainStatus() {
-  if (!brainCache || Date.now() - brainCache.checkedAt > 5 * 60_000) brainCache = await brainStatus();
+  const maxAge = brainCache?.ready ? 5 * 60_000 : 20_000;
+  if (!brainCache || Date.now() - brainCache.checkedAt > maxAge) brainCache = await brainStatus();
   return brainCache;
 }
 
