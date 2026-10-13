@@ -10,7 +10,8 @@ import { profileDonor } from "./profile.mjs";
 import { analyzeWithRea, reaVersion, summarizeReaEvidence } from "./rea.mjs";
 import { exists, log } from "./util.mjs";
 
-const HELP = `FrankenAgent ${FRANKEN_VERSION} — fuse two projects into a new, verified creature.
+const HELP = `FrankenAgent ${FRANKEN_VERSION} — built on REA (Reverse Engineer Anything).
+Fuse two projects into a new, verified creature.
 
 Usage
   franken fuse <donorA> <donorB> [options]   Dissect, fuse, grow and verify

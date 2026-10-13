@@ -1,7 +1,7 @@
 {
   "name": "frankenagent",
   "version": "0.1.0",
-  "description": "Dissect two software projects with REA, fuse their capabilities, and grow a brand-new verified creature.",
+  "description": "Built on REA (Reverse Engineer Anything): dissect two projects, fuse their capabilities, and grow a brand-new verified creature.",
   "type": "module",
   "bin": {
     "franken": "bin/franken.mjs"
@@ -35,12 +35,14 @@
     "url": "https://github.com/sickpyramid/FrankenAgent/issues"
   },
   "keywords": [
-    "reverse-engineering",
     "rea",
-    "agents",
+    "rea-agents",
+    "reverse-engineer-anything",
+    "reverse-engineering",
+    "ai-agents",
     "code-generation",
     "clean-room",
-    "fusion",
+    "software-fusion",
     "cli"
   ]
 }

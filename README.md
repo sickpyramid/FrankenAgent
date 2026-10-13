@@ -1,6 +1,24 @@
+<div align="center">
+
 # 🧟 FrankenAgent
 
-**Give it two projects. It dissects them, fuses their best capabilities, and grows something new — then proves the creature is alive.**
+### Built on [REA — Reverse Engineer Anything](https://github.com/morluto/rea)
+
+**REA reverse engineers anything. FrankenAgent fuses what it finds into something new.**
+
+Give it two projects. It dissects both with REA, fuses their best capabilities, grows a brand-new project — then proves the creature is alive.
+
+[![Built on REA](https://img.shields.io/badge/built%20on-REA%20%E2%80%94%20Reverse%20Engineer%20Anything-5c4ee5?style=flat-square)](https://github.com/morluto/rea)
+[![rea-agents](https://img.shields.io/badge/rea--agents-6.4.0-cb3837?style=flat-square&logo=npm)](https://www.npmjs.com/package/rea-agents)
+[![Creatures alive](https://img.shields.io/badge/creatures%20alive-2%2F2-2ea44f?style=flat-square)](showcase)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22.19-339933?style=flat-square&logo=nodedotjs&logoColor=white)](#install)
+[![MIT license](https://img.shields.io/badge/license-MIT-f4c430?style=flat-square)](LICENSE)
+
+[Built on REA](#built-on-rea-reverse-engineer-anything) · [Creatures](#the-creatures) · [How it works](#how-it-works) · [Install](#install) · [FAQ](#faq)
+
+</div>
+
+---
 
 ```bash
 franken fuse vercel/ms sindresorhus/pretty-bytes
@@ -30,7 +48,29 @@ franken fuse vercel/ms sindresorhus/pretty-bytes
 ══════════════════════════════════════
 ```
 
-FrankenAgent uses [REA — Reverse Engineer Anything](https://github.com/morluto/rea) to inspect donors, then adds what REA does not do: **fusion, clean-room synthesis and verification.**
+## Built on REA (Reverse Engineer Anything)
+
+[REA — Reverse Engineer Anything](https://github.com/morluto/rea) answers *"how does this feature work?"* for binaries, JavaScript and Electron apps, .NET assemblies and websites, with evidence for every conclusion. REA's own pitch is to see a feature you like, understand it, and build a version for your project.
+
+FrankenAgent takes that one step further: **reverse engineer two things with REA, then fuse them into a third thing that never existed.**
+
+| | REA — Reverse Engineer Anything | FrankenAgent (built on REA) |
+|---|---|---|
+| Input | One target: an app, binary, bundle or site | Two donors |
+| Question | How does this work? | What new thing can these two become? |
+| Output | Evidence: modules, imports, call paths, behavior | A brand-new project with a lab report |
+| Proof | Evidence and limitations behind each finding | Contract tests, sandboxed verification, originality scan, certificate |
+
+How FrankenAgent uses REA:
+
+- Every donor goes through **REA's static JavaScript application analysis** (`rea analyze-javascript-application`). Donor code is parsed as inert text and never executed.
+- REA's evidence graph is condensed into modules, exports and imports, and fed into the donor's **spec card**, so the fusion is grounded in what REA actually observed.
+- Each lab report records the **REA version and REA evidence id** for every donor, e.g. `ev_1bb7dd1cd16550c…`, so anyone can trace a creature back to REA's findings.
+- `rea-agents` is a pinned dependency (6.4.0). Run `npm run rea:doctor` to check your REA setup.
+
+On the roadmap: REA website and Electron-app analysis as donor types. That covers REA's whole "anything", not just source repositories.
+
+> FrankenAgent is an independent community project built on REA. It is not affiliated with or endorsed by the REA maintainers. All credit for REA goes to [morluto and the REA contributors](https://github.com/morluto/rea). If you like FrankenAgent, go star REA too.
 
 ## The creatures
 
@@ -54,7 +94,7 @@ donor B ─┘   license    REA +     3 ideas  tests      fresh   sandbox    cle
 ```
 
 1. **Intake** — clones the donors (shallow, no hooks, no symlinks) and runs a **license gate**. Copyleft and unknown licenses are rejected unless you opt in.
-2. **Dissect** — [REA](https://github.com/morluto/rea) statically analyses each donor (modules, exports, imports — donor code is parsed as inert text, never executed). The brain turns REA evidence, README and tests into a **spec card**: behavior only, no code.
+2. **Dissect with REA** — [REA (Reverse Engineer Anything)](https://github.com/morluto/rea) statically analyses each donor (modules, exports, imports — donor code is parsed as inert text, never executed). The brain turns REA evidence, README and tests into a **spec card**: behavior only, no code.
 3. **Fuse** — the brain proposes three creatures that inherit from both donors *and* gain a capability neither had. You pick one.
 4. **Contract** — acceptance tests are written **before** the creature exists, each mapped to its origin (A, B or fusion). The creature can never edit them.
 5. **Grow** — a brand-new codebase is generated from the specs: zero dependencies, its own tests, README and CLI.
@@ -101,13 +141,33 @@ Every brain answer is cached in the run folder, so runs are resumable and reprod
 - FrankenAgent learns **behavior**, never code. The originality scan enforces this; do not disable it to ship copied code.
 - Donor projects keep their own copyrights. Reports credit every donor with its commit and license.
 
+## FAQ
+
+**What is REA (Reverse Engineer Anything)?**
+[REA](https://github.com/morluto/rea) is an open-source CLI and MCP server by morluto that lets you and your AI agent reverse engineer native binaries, JavaScript/Electron apps, .NET assemblies and websites, with evidence for every finding. Install it with `npx rea-agents setup`.
+
+**What can I build with REA?**
+REA's own workflow is "understand a feature, then build a version for your project." FrankenAgent is one example of building on top of REA: it automates *understand two projects → fuse them → build and verify something new*.
+
+**Is FrankenAgent an REA plugin or fork?**
+Neither. It is a separate open-source tool that depends on the published `rea-agents` npm package and calls the REA CLI. REA is unmodified.
+
+**Do I need REA installed separately?**
+No. `npm install` pulls in the pinned `rea-agents` package. `franken doctor` shows which REA version is active. Use `--no-rea` to skip REA analysis.
+
+**Does it copy code from the donors?**
+No. FrankenAgent learns behavior from REA evidence, READMEs and tests, then grows fresh code. The originality scan rejects creatures that contain copied donor code, even reformatted.
+
+**Can it reverse engineer websites and apps like REA does?**
+Not yet. v0.1 fuses source repositories. Websites and Electron apps through REA's analyzers are next on the roadmap.
+
 ## Status
 
-v0.1 — JavaScript/TypeScript donors, library + CLI creatures, Node.js verification. Next: website donors via REA's web analysis, Python creatures, a public lab gallery.
+v0.1 — JavaScript/TypeScript donors analysed with REA, library + CLI creatures, Node.js verification. Next: website and Electron-app donors through REA, Python creatures, a public lab gallery.
 
 ## Credits
 
-- [REA — Reverse Engineer Anything](https://github.com/morluto/rea) by morluto and contributors (MIT) powers donor inspection. FrankenAgent is independent and not affiliated with or endorsed by REA.
+- **[REA — Reverse Engineer Anything](https://github.com/morluto/rea)** by morluto and contributors (MIT) is the reverse-engineering engine underneath FrankenAgent. FrankenAgent is independent and not affiliated with or endorsed by REA. Please star REA if this project is useful to you.
 - Showcase donors: [ms](https://github.com/vercel/ms), [pretty-bytes](https://github.com/sindresorhus/pretty-bytes), [dequal](https://github.com/lukeed/dequal), [klona](https://github.com/lukeed/klona) — all MIT. No donor code is included in this repository.
 
 ## License
