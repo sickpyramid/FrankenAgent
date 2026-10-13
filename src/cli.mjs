@@ -5,20 +5,20 @@ import { parseArgs } from "node:util";
 import { acquireTarget } from "./acquire.mjs";
 import { autoProvider, findClaudeCli, HandoffPending } from "./brain.mjs";
 import { licenseGate } from "./license.mjs";
-import { advanceRun, createRun, FRANKEN_VERSION } from "./pipeline.mjs";
+import { advanceRun, createRun, REAFUSE_VERSION } from "./pipeline.mjs";
 import { profileDonor } from "./profile.mjs";
 import { analyzeWithRea, reaVersion, summarizeReaEvidence } from "./rea.mjs";
 import { exists, log } from "./util.mjs";
 
-const HELP = `FrankenAgent ${FRANKEN_VERSION} — built on REA (Reverse Engineer Anything).
+const HELP = `ReaFuse ${REAFUSE_VERSION} — built on REA (Reverse Engineer Anything).
 Fuse two projects into a new, verified creature.
 
 Usage
-  franken fuse <donorA> <donorB> [options]   Dissect, fuse, grow and verify
-  franken resume <run-id|run-dir> [options]  Continue a run (after a handoff, or with a new --pick)
-  franken dissect <donor> [--no-rea]         Profile one donor (no brain needed)
-  franken runs                               List runs in this lab
-  franken doctor                             Check REA, git and brain availability
+  reafuse fuse <donorA> <donorB> [options]   Dissect, fuse, grow and verify
+  reafuse resume <run-id|run-dir> [options]  Continue a run (after a handoff, or with a new --pick)
+  reafuse dissect <donor> [--no-rea]         Profile one donor (no brain needed)
+  reafuse runs                               List runs in this lab
+  reafuse doctor                             Check REA, git and brain availability
 
 Donors
   A GitHub URL, owner/repo, a local directory, a website (instagram.com) or a
@@ -28,7 +28,7 @@ Options
   --pick <n>          Which of the 3 proposed creatures to grow (default: ask, or 1)
   --brain <name>      anthropic | claude-cli | handoff (default: auto)
   --model <id>        Model for the brain (default: claude-opus-5-5)
-  --lab <dir>         Lab directory (default: ./.franken)
+  --lab <dir>         Lab directory (default: ./.reafuse)
   --max-repairs <n>   Repair attempts after a failed verification (default: 2)
   --no-rea            Skip REA static analysis
   --allow-copyleft    Allow copyleft donors (behavior only)
@@ -56,7 +56,7 @@ export async function main(argv) {
     },
   });
   const [command, ...rest] = positionals;
-  const labDir = resolve(values.lab ?? ".franken");
+  const labDir = resolve(values.lab ?? ".reafuse");
 
   if (values.help || !command) {
     console.log(HELP);
@@ -125,7 +125,7 @@ export async function main(argv) {
     console.log(
       JSON.stringify(
         {
-          frankenagent: FRANKEN_VERSION,
+          reafuse: REAFUSE_VERSION,
           node: process.version,
           rea: reaVersion(),
           git: git.code === 0 ? git.stdout.trim() : "missing",
@@ -142,7 +142,7 @@ export async function main(argv) {
     return 0;
   }
 
-  throw new Error(`Unknown command "${command}". Try franken --help.`);
+  throw new Error(`Unknown command "${command}". Try reafuse --help.`);
 }
 
 async function advance(runDir, labDir, values) {
@@ -156,7 +156,7 @@ async function advance(runDir, labDir, values) {
     });
     if (!report) {
       process.stderr.write(`
-🧬 Three creatures proposed. Pick one with: franken resume "${runDir}" --pick <n>
+🧬 Three creatures proposed. Pick one with: reafuse resume "${runDir}" --pick <n>
 `);
       return 4;
     }
@@ -169,7 +169,7 @@ async function advance(runDir, labDir, values) {
   } catch (error) {
     if (error instanceof HandoffPending) {
       process.stderr.write(
-        `\n🤝 Brain handoff: stage "${error.stage}" needs an answer.\n   Prompt:   ${error.promptPath}\n   Answer →  ${error.responsePath}\n   Then run: franken resume "${runDir}"\n`,
+        `\n🤝 Brain handoff: stage "${error.stage}" needs an answer.\n   Prompt:   ${error.promptPath}\n   Answer →  ${error.responsePath}\n   Then run: reafuse resume "${runDir}"\n`,
       );
       return 3;
     }

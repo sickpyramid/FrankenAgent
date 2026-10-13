@@ -1,4 +1,4 @@
-// FrankenAgent lab UI — vanilla JS, no build step.
+// ReaFuse lab UI — vanilla JS, no build step.
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -142,7 +142,7 @@ function appendLog(text) {
   log.insertAdjacentHTML("beforeend", `<span class="cursor"></span>`);
   if (nearBottom) log.scrollTop = log.scrollHeight;
   for (const [pattern, stage] of MARKERS) if (pattern.test(text)) setStage(stage);
-  if (/^franken: /m.test(text)) setStage(current?.stage ?? "intake", { failed: true });
+  if (/^reafuse: /m.test(text)) setStage(current?.stage ?? "intake", { failed: true });
 }
 
 function renderDonors(view) {

@@ -41,7 +41,7 @@ export function classifyTarget(input) {
   return { kind: "name", name: text };
 }
 
-/** Resolves a repository reference to a local directory FrankenAgent can inspect. */
+/** Resolves a repository reference to a local directory ReaFuse can inspect. */
 export async function acquireTarget(input, cacheDir, { allowLocal = true } = {}) {
   let target = classifyTarget(input);
 

@@ -1,5 +1,5 @@
 node_modules/
-.franken/
+.reafuse/
 .env
 .env.*
 !.env.example

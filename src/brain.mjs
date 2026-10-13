@@ -75,7 +75,7 @@ function validate(schema, value, source) {
 }
 
 function renderPromptFile(stage, system, prompt, jsonSchema, responsePath) {
-  return `<!-- FrankenAgent brain request: ${stage} -->
+  return `<!-- ReaFuse brain request: ${stage} -->
 <!-- Answer with JSON matching the schema below, saved to: ${responsePath} -->
 
 # System
@@ -129,7 +129,7 @@ async function anthropicBackend({ system, prompt, jsonSchema, model, effort }) {
 
 async function claudeCliBackend({ system, prompt, jsonSchema, model, runDir }) {
   const bin = findClaudeCli();
-  if (!bin) throw new Error("Claude CLI not found. Install Claude Code or set FRANKEN_CLAUDE_BIN.");
+  if (!bin) throw new Error("Claude CLI not found. Install Claude Code or set REAFUSE_CLAUDE_BIN.");
   const args = [
     "-p",
     "--output-format",
@@ -142,7 +142,7 @@ async function claudeCliBackend({ system, prompt, jsonSchema, model, runDir }) {
     "--json-schema",
     JSON.stringify(jsonSchema),
   ];
-  if (process.env.FRANKEN_CLAUDE_MODEL ?? model) args.push("--model", process.env.FRANKEN_CLAUDE_MODEL ?? model);
+  if (process.env.REAFUSE_CLAUDE_MODEL ?? model) args.push("--model", process.env.REAFUSE_CLAUDE_MODEL ?? model);
 
   const result = await run(bin, args, { cwd: runDir, input: prompt, timeoutMs: 30 * 60_000 });
   let envelope;
@@ -166,7 +166,7 @@ export function extractJson(text) {
 }
 
 export function findClaudeCli() {
-  if (process.env.FRANKEN_CLAUDE_BIN) return process.env.FRANKEN_CLAUDE_BIN;
+  if (process.env.REAFUSE_CLAUDE_BIN) return process.env.REAFUSE_CLAUDE_BIN;
   const exe = process.platform === "win32" ? ".exe" : "";
   const pathDirs = (process.env.PATH ?? "").split(process.platform === "win32" ? ";" : ":");
   for (const dir of [...pathDirs, join(homedir(), ".local", "bin"), join(homedir(), ".claude", "local")]) {

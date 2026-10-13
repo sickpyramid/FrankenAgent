@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// FrankenAgent web lab: a zero-dependency HTTP server that queues fusions,
+// ReaFuse web lab: a zero-dependency HTTP server that queues fusions,
 // runs them through the CLI in child processes and streams the lab log live.
 import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
@@ -10,18 +10,18 @@ import { fileURLToPath } from "node:url";
 
 import { autoProvider, findClaudeCli } from "../src/brain.mjs";
 import { classifyTarget } from "../src/acquire.mjs";
-import { createRun, FRANKEN_VERSION } from "../src/pipeline.mjs";
+import { createRun, REAFUSE_VERSION } from "../src/pipeline.mjs";
 import { reaVersion } from "../src/rea.mjs";
 import { exists, readJson, run as runCommand, safeJoin, writeJson } from "../src/util.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC = join(ROOT, "web", "public");
 const SHOWCASE = join(ROOT, "showcase");
-const LAB = resolve(process.env.FRANKEN_LAB ?? join(ROOT, ".franken"));
+const LAB = resolve(process.env.REAFUSE_LAB ?? join(ROOT, ".reafuse"));
 const PORT = Number(process.env.PORT ?? 4400);
-const BRAIN = process.env.FRANKEN_BRAIN ?? "auto";
-const MAX_CONCURRENT = Number(process.env.FRANKEN_MAX_CONCURRENT ?? 1);
-const RUNS_PER_HOUR = Number(process.env.FRANKEN_RUNS_PER_HOUR ?? 6);
+const BRAIN = process.env.REAFUSE_BRAIN ?? "auto";
+const MAX_CONCURRENT = Number(process.env.REAFUSE_MAX_CONCURRENT ?? 1);
+const RUNS_PER_HOUR = Number(process.env.REAFUSE_RUNS_PER_HOUR ?? 6);
 const JOB_TIMEOUT_MS = 45 * 60_000;
 
 const queue = [];
@@ -49,7 +49,7 @@ async function start({ runId, args }) {
   const runDir = join(LAB, "runs", runId);
   const logPath = join(runDir, "live.log");
   await appendFile(logPath, `\n▶ ${new Date().toISOString()} lab process started\n`);
-  const child = spawn(process.execPath, [join(ROOT, "bin", "franken.mjs"), ...args, "--lab", LAB], {
+  const child = spawn(process.execPath, [join(ROOT, "bin", "reafuse.mjs"), ...args, "--lab", LAB], {
     cwd: ROOT,
     env: Object.fromEntries(Object.entries(process.env).filter(([key]) => key !== "FORCE_COLOR" && key !== "NO_COLOR")),
     stdio: ["ignore", "pipe", "pipe"],
@@ -71,10 +71,10 @@ async function start({ runId, args }) {
 /** Masks server paths so the public log never reveals the filesystem layout. */
 function scrub(text) {
   let out = text;
-  for (const [path, label] of [[LAB, "<lab>"], [ROOT, "<franken>"]]) {
+  for (const [path, label] of [[LAB, "<lab>"], [ROOT, "<reafuse>"]]) {
     out = out.split(path).join(label).split(path.replaceAll("\\", "/")).join(label);
   }
-  return out.replace(/franken resume "[^"]*"/g, "franken resume <run>");
+  return out.replace(/reafuse resume "[^"]*"/g, "reafuse resume <run>");
 }
 
 function queuePosition(runId) {
@@ -223,7 +223,7 @@ async function api(req, res, url) {
 
   if (req.method === "GET" && parts[0] === "status") {
     const brain = await cachedBrainStatus();
-    return send(res, 200, { frankenagent: FRANKEN_VERSION, rea: reaVersion(), brain, queue: queue.length, running: active.size });
+    return send(res, 200, { reafuse: REAFUSE_VERSION, rea: reaVersion(), brain, queue: queue.length, running: active.size });
   }
 
   if (req.method === "GET" && parts[0] === "gallery") {
@@ -373,4 +373,4 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`FrankenAgent lab listening on :${PORT} (lab ${LAB}, brain ${BRAIN})`));
+server.listen(PORT, () => console.log(`ReaFuse lab listening on :${PORT} (lab ${LAB}, brain ${BRAIN})`));

@@ -63,7 +63,7 @@ const contract = {
 const goodIndex = "export const mix = (a, b, t) => { const k = t < 0 ? 0 : t > 1 ? 1 : t; return a + (b - a) * k; };\n";
 
 async function seededRun(growFiles) {
-  const lab = await mkdtemp(join(tmpdir(), "franken-lab-"));
+  const lab = await mkdtemp(join(tmpdir(), "reafuse-lab-"));
   const runDir = await createRun(lab, donor, donor, { pick: 1, noRea: true, maxRepairs: 0 });
   const answers = {
     "spec-A": spec("A"),
@@ -117,7 +117,7 @@ test("creature tests run sandboxed: writing files is denied", async () => {
 });
 
 test("the handoff brain pauses a run at the first unanswered stage", async () => {
-  const lab = await mkdtemp(join(tmpdir(), "franken-lab-"));
+  const lab = await mkdtemp(join(tmpdir(), "reafuse-lab-"));
   const runDir = await createRun(lab, donor, donor, { pick: 1, noRea: true });
   await assert.rejects(advanceRun(runDir, { labDir: lab, brainProvider: "handoff" }), (error) => {
     assert.ok(error instanceof HandoffPending);
@@ -128,7 +128,7 @@ test("the handoff brain pauses a run at the first unanswered stage", async () =>
 });
 
 test("a copyleft donor is rejected before any brain call", async () => {
-  const lab = await mkdtemp(join(tmpdir(), "franken-lab-"));
+  const lab = await mkdtemp(join(tmpdir(), "reafuse-lab-"));
   const gpl = fileURLToPath(new URL("./fixtures/donor-gpl", import.meta.url));
   const runDir = await createRun(lab, donor, gpl, { noRea: true });
   const { report } = await advanceRun(runDir, { labDir: lab, brainProvider: "handoff" });

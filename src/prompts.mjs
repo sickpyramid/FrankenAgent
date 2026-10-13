@@ -1,4 +1,4 @@
-export const SYSTEM = `You are the surgeon inside FrankenAgent, a laboratory that fuses two existing software projects ("donors") into one brand-new project ("the creature").
+export const SYSTEM = `You are the surgeon inside ReaFuse, a laboratory that fuses two existing software projects ("donors") into one brand-new project ("the creature").
 
 The clean-room rule is absolute:
 - You may learn WHAT donors do (behavior, inputs, outputs, ideas).
@@ -119,7 +119,7 @@ ${files.map((file) => `### ${file.path}\n${file.content}`).join("\n\n")}`;
 export function resolvePrompt(input, kind) {
   return `A user wants to use "${input}" (${kind === "website" ? "a website" : "a product name"}) as a donor.
 
-FrankenAgent never dissects closed-source products. Instead, find open-source "twins": existing public GitHub projects that implement the same core capabilities, so the product's ideas can be learned legally from open code.
+ReaFuse never dissects closed-source products. Instead, find open-source "twins": existing public GitHub projects that implement the same core capabilities, so the product's ideas can be learned legally from open code.
 
 Rules:
 - Only list repositories you are confident exist on GitHub, as owner/name.

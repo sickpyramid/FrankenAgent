@@ -1,4 +1,4 @@
-# FrankenAgent web lab. Built on REA (Reverse Engineer Anything).
+# ReaFuse web lab. Built on REA (Reverse Engineer Anything).
 FROM node:24-bookworm-slim
 
 RUN apt-get update \
@@ -6,7 +6,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # The lab's brain: Claude Code CLI. Log in once per server:
-#   docker exec -it frankenagent claude   (then /login)
+#   docker exec -it reafuse claude   (then /login)
 RUN npm install -g @anthropic-ai/claude-code@2.1.296 && npm cache clean --force
 
 WORKDIR /app
@@ -23,10 +23,10 @@ RUN mkdir -p /data/lab /data/home && chown -R node:node /data
 ENV NODE_ENV=production \
     PORT=4400 \
     HOME=/data/home \
-    FRANKEN_LAB=/data/lab \
-    FRANKEN_BRAIN=claude-cli \
-    FRANKEN_MAX_CONCURRENT=1 \
-    FRANKEN_RUNS_PER_HOUR=6
+    REAFUSE_LAB=/data/lab \
+    REAFUSE_BRAIN=claude-cli \
+    REAFUSE_MAX_CONCURRENT=1 \
+    REAFUSE_RUNS_PER_HOUR=6
 USER node
 VOLUME /data
 EXPOSE 4400

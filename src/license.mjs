@@ -60,7 +60,7 @@ export function categorize(spdx) {
 }
 
 /**
- * License gate. FrankenAgent only lifts behavior (ideas), never code, but v1
+ * License gate. ReaFuse only lifts behavior (ideas), never code, but v1
  * still refuses donors whose terms are unknown or copyleft unless the
  * operator explicitly opts in.
  */

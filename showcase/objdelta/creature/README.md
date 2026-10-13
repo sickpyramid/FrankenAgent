@@ -46,7 +46,7 @@ objdelta before.json after.json --json   # machine-readable operations
 
 ## Lineage
 
-objdelta was grown by [FrankenAgent](https://github.com/sickpyramid/FrankenAgent) from two donors, without copying their code. See `LINEAGE.md`.
+objdelta was grown by [ReaFuse](https://github.com/sickpyramid/ReaFuse) from two donors, without copying their code. See `LINEAGE.md`.
 
 ## License
 

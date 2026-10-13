@@ -16,7 +16,7 @@ import { exists, log, newRunId, readJson, safeJoin, slugify, truncate, writeJson
 import { verdictFor, verifyCreature } from "./verify.mjs";
 
 const require = createRequire(import.meta.url);
-export const FRANKEN_VERSION = require("../package.json").version;
+export const REAFUSE_VERSION = require("../package.json").version;
 
 /** Creates a new run directory for donors A and B and returns its path. */
 export async function createRun(labDir, donorA, donorB, options) {
@@ -25,7 +25,7 @@ export async function createRun(labDir, donorA, donorB, options) {
   await writeJson(join(runDir, "run.json"), {
     id,
     createdAt: new Date().toISOString(),
-    frankenagent: FRANKEN_VERSION,
+    reafuse: REAFUSE_VERSION,
     rea: reaVersion(),
     inputs: { A: donorA, B: donorB },
     options,

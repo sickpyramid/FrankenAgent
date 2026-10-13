@@ -1,8 +1,8 @@
 {
-  "schema": "frankenagent.lab-report/v1",
+  "schema": "reafuse.lab-report/v1",
   "runId": "202610131250-dequal-x-klona-5fb6",
   "createdAt": "2026-10-13T12:50:32.341Z",
-  "frankenagent": "0.1.0",
+  "reafuse": "0.1.0",
   "rea": "6.4.0",
   "brain": {
     "provider": "handoff",
@@ -291,5 +291,5 @@
     "status": "ALIVE",
     "reason": null
   },
-  "certificate": "53fbf8e8b3df12aa8862166a37e529e06821a0c848e045816d5fc3f7c9ac2f38"
+  "certificate": "a543ade9fb45ae631d09d2d153b757ca9f0f4db76602d5fb473eafecd24bd30e"
 }

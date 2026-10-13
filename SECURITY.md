@@ -1,6 +1,6 @@
 # Security policy
 
-FrankenAgent treats donor repositories, READMEs, file names and model output as untrusted data.
+ReaFuse treats donor repositories, READMEs, file names and model output as untrusted data.
 
 ## What v0.1 does
 

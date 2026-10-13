@@ -38,7 +38,7 @@ ratewise budget "100 Mbit/s" 1h        # 45 GB
 
 ## Lineage
 
-ratewise was grown by [FrankenAgent](https://github.com/sickpyramid/FrankenAgent) from two donors, without copying their code. See `LINEAGE.md`.
+ratewise was grown by [ReaFuse](https://github.com/sickpyramid/ReaFuse) from two donors, without copying their code. See `LINEAGE.md`.
 
 ## License
 

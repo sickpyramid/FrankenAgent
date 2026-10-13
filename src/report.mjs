@@ -18,10 +18,10 @@ export async function writeReport(runDir, state, details) {
   const verdict = state.verdict ?? { status: "PENDING" };
 
   const body = {
-    schema: "frankenagent.lab-report/v1",
+    schema: "reafuse.lab-report/v1",
     runId: state.id,
     createdAt: state.createdAt,
-    frankenagent: state.frankenagent,
+    reafuse: state.reafuse,
     rea: state.rea,
     brain: state.brain,
     donors: Object.fromEntries(
@@ -128,7 +128,7 @@ export function renderMarkdown(report) {
 
   lines.push("## Provenance", "");
   lines.push(`- Run: \`${report.runId}\``);
-  lines.push(`- FrankenAgent ${report.frankenagent} · REA ${report.rea ?? "n/a"} · brain: ${report.brain?.provider ?? "n/a"}${report.brain?.model && report.brain.provider !== "handoff" ? ` (${report.brain.model})` : ""}`);
+  lines.push(`- ReaFuse ${report.reafuse} · REA ${report.rea ?? "n/a"} · brain: ${report.brain?.provider ?? "n/a"}${report.brain?.model && report.brain.provider !== "handoff" ? ` (${report.brain.model})` : ""}`);
   lines.push(`- Certificate: \`${report.certificate}\``, "");
   lines.push("Behavior was learned from the donors; no donor code was copied or executed. Donors keep their own licenses and credit.", "");
   return lines.join("\n");

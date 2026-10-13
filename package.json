@@ -1,10 +1,10 @@
 {
-  "name": "frankenagent",
+  "name": "reafuse",
   "version": "0.1.0",
   "description": "Built on REA (Reverse Engineer Anything): dissect two projects, fuse their capabilities, and grow a brand-new verified creature.",
   "type": "module",
   "bin": {
-    "franken": "bin/franken.mjs"
+    "reafuse": "bin/reafuse.mjs"
   },
   "files": [
     "bin",
@@ -28,11 +28,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sickpyramid/FrankenAgent.git"
+    "url": "git+https://github.com/sickpyramid/ReaFuse.git"
   },
-  "homepage": "https://github.com/sickpyramid/FrankenAgent#readme",
+  "homepage": "https://github.com/sickpyramid/ReaFuse#readme",
   "bugs": {
-    "url": "https://github.com/sickpyramid/FrankenAgent/issues"
+    "url": "https://github.com/sickpyramid/ReaFuse/issues"
   },
   "keywords": [
     "rea",

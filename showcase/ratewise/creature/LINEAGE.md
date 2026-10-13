@@ -73,7 +73,7 @@ ratewise budget "100 Mbit/s" 1h
 ## Provenance
 
 - Run: `202610131244-ms-x-pretty-bytes-b462`
-- FrankenAgent 0.1.0 · REA 6.4.0 · brain: handoff
-- Certificate: `eefd4adaea0f52578cd8bacbc9c87c3eac2740fb43c74d2c992fe5f3943c3059`
+- ReaFuse 0.1.0 · REA 6.4.0 · brain: handoff
+- Certificate: `16e6ce1b250dbd635734e23d440e04385a07b509781b4b846a11b46c95155e2d`
 
 Behavior was learned from the donors; no donor code was copied or executed. Donors keep their own licenses and credit.

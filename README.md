@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🧟 FrankenAgent
+# 🧟 ReaFuse
 
 ### Built on [REA — Reverse Engineer Anything](https://github.com/morluto/rea)
 
-**REA reverse engineers anything. FrankenAgent fuses what it finds into something new.**
+**REA reverse engineers anything. ReaFuse fuses what it finds into something new.**
 
 Give it two projects. It dissects both with REA, fuses their best capabilities, grows a brand-new project — then proves the creature is alive.
 
@@ -14,6 +14,8 @@ Give it two projects. It dissects both with REA, fuses their best capabilities, 
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22.19-339933?style=flat-square&logo=nodedotjs&logoColor=white)](#install)
 [![MIT license](https://img.shields.io/badge/license-MIT-f4c430?style=flat-square)](LICENSE)
 
+<sub>Independent community project built on REA. Not made by, affiliated with or endorsed by the REA maintainers.</sub>
+
 [Built on REA](#built-on-rea-reverse-engineer-anything) · [Creatures](#the-creatures) · [How it works](#how-it-works) · [Install](#install) · [FAQ](#faq)
 
 </div>
@@ -21,7 +23,7 @@ Give it two projects. It dissects both with REA, fuses their best capabilities, 
 ---
 
 ```bash
-franken fuse vercel/ms sindresorhus/pretty-bytes
+reafuse fuse vercel/ms sindresorhus/pretty-bytes
 ```
 
 ```
@@ -52,16 +54,16 @@ franken fuse vercel/ms sindresorhus/pretty-bytes
 
 [REA — Reverse Engineer Anything](https://github.com/morluto/rea) answers *"how does this feature work?"* for binaries, JavaScript and Electron apps, .NET assemblies and websites, with evidence for every conclusion. REA's own pitch is to see a feature you like, understand it, and build a version for your project.
 
-FrankenAgent takes that one step further: **reverse engineer two things with REA, then fuse them into a third thing that never existed.**
+ReaFuse takes that one step further: **reverse engineer two things with REA, then fuse them into a third thing that never existed.**
 
-| | REA — Reverse Engineer Anything | FrankenAgent (built on REA) |
+| | REA — Reverse Engineer Anything | ReaFuse (built on REA) |
 |---|---|---|
 | Input | One target: an app, binary, bundle or site | Two donors |
 | Question | How does this work? | What new thing can these two become? |
 | Output | Evidence: modules, imports, call paths, behavior | A brand-new project with a lab report |
 | Proof | Evidence and limitations behind each finding | Contract tests, sandboxed verification, originality scan, certificate |
 
-How FrankenAgent uses REA:
+How ReaFuse uses REA:
 
 - Every donor goes through **REA's static JavaScript application analysis** (`rea analyze-javascript-application`). Donor code is parsed as inert text and never executed.
 - REA's evidence graph is condensed into modules, exports and imports, and fed into the donor's **spec card**, so the fusion is grounded in what REA actually observed.
@@ -70,7 +72,7 @@ How FrankenAgent uses REA:
 
 On the roadmap: REA website and Electron-app analysis as donor types. That covers REA's whole "anything", not just source repositories.
 
-> FrankenAgent is an independent community project built on REA. It is not affiliated with or endorsed by the REA maintainers. All credit for REA goes to [morluto and the REA contributors](https://github.com/morluto/rea). If you like FrankenAgent, go star REA too.
+> ReaFuse is an independent community project built on REA. It is not affiliated with or endorsed by the REA maintainers. All credit for REA goes to [morluto and the REA contributors](https://github.com/morluto/rea). If you like ReaFuse, go star REA too.
 
 ## The creatures
 
@@ -107,20 +109,20 @@ donor B ─┘   license    REA +     3 ideas  tests      fresh   sandbox    cle
 Requires Node.js 22.19+ and git.
 
 ```bash
-git clone https://github.com/sickpyramid/FrankenAgent && cd FrankenAgent
+git clone https://github.com/sickpyramid/ReaFuse && cd ReaFuse
 npm install
-npm link        # makes the `franken` command available
-franken doctor
+npm link        # makes the `reafuse` command available
+reafuse doctor
 ```
 
 ## Usage
 
 ```bash
-franken fuse <donorA> <donorB> [--pick n]   # full run
-franken resume <run-id>                     # continue a paused run, or grow another pick
-franken dissect <donor>                     # profile + license + REA evidence, no brain needed
-franken runs                                # list runs
-franken doctor                              # check REA, git and brain availability
+reafuse fuse <donorA> <donorB> [--pick n]   # full run
+reafuse resume <run-id>                     # continue a paused run, or grow another pick
+reafuse dissect <donor>                     # profile + license + REA evidence, no brain needed
+reafuse runs                                # list runs
+reafuse doctor                              # check REA, git and brain availability
 ```
 
 Donors can be GitHub URLs, `owner/repo` shorthand or local directories. Websites and binaries are on the roadmap.
@@ -132,7 +134,7 @@ Type two subjects side by side, such as a repo, a link or just an app name like 
 ```bash
 node web/server.mjs                                   # http://localhost:4400
 docker compose -f deploy/compose.yml up -d --build    # production (Claude CLI inside)
-docker exec -it frankenagent claude                   # one-time login for the lab's brain
+docker exec -it reafuse claude                   # one-time login for the lab's brain
 ```
 
 ### Choosing a brain
@@ -140,7 +142,7 @@ docker exec -it frankenagent claude                   # one-time login for the l
 | Brain | How | When |
 |---|---|---|
 | `anthropic` | set `ANTHROPIC_API_KEY` | default when a key is present; uses Claude Opus 5.5 with structured outputs |
-| `claude-cli` | a logged-in [Claude Code](https://claude.com/claude-code) CLI on `PATH` (or `FRANKEN_CLAUDE_BIN`) | use your Claude subscription |
+| `claude-cli` | a logged-in [Claude Code](https://claude.com/claude-code) CLI on `PATH` (or `REAFUSE_CLAUDE_BIN`) | use your Claude subscription |
 | `handoff` | `--brain handoff` | writes each request to `brain/<stage>.prompt.md` and waits for `<stage>.response.json` — lets any agent (or a human) act as the brain |
 
 Every brain answer is cached in the run folder, so runs are resumable and reproducible regardless of provider. The showcase creatures were produced with the `handoff` brain, with Claude Code answering each stage.
@@ -148,7 +150,7 @@ Every brain answer is cached in the run folder, so runs are resumable and reprod
 ## Responsible use
 
 - Only fuse projects you own or whose licenses permit it. The license gate is a safeguard, not legal advice.
-- FrankenAgent learns **behavior**, never code. The originality scan enforces this; do not disable it to ship copied code.
+- ReaFuse learns **behavior**, never code. The originality scan enforces this; do not disable it to ship copied code.
 - Donor projects keep their own copyrights. Reports credit every donor with its commit and license.
 
 ## FAQ
@@ -157,16 +159,16 @@ Every brain answer is cached in the run folder, so runs are resumable and reprod
 [REA](https://github.com/morluto/rea) is an open-source CLI and MCP server by morluto that lets you and your AI agent reverse engineer native binaries, JavaScript/Electron apps, .NET assemblies and websites, with evidence for every finding. Install it with `npx rea-agents setup`.
 
 **What can I build with REA?**
-REA's own workflow is "understand a feature, then build a version for your project." FrankenAgent is one example of building on top of REA: it automates *understand two projects → fuse them → build and verify something new*.
+REA's own workflow is "understand a feature, then build a version for your project." ReaFuse is one example of building on top of REA: it automates *understand two projects → fuse them → build and verify something new*.
 
-**Is FrankenAgent an REA plugin or fork?**
+**Is ReaFuse an REA plugin or fork?**
 Neither. It is a separate open-source tool that depends on the published `rea-agents` npm package and calls the REA CLI. REA is unmodified.
 
 **Do I need REA installed separately?**
-No. `npm install` pulls in the pinned `rea-agents` package. `franken doctor` shows which REA version is active. Use `--no-rea` to skip REA analysis.
+No. `npm install` pulls in the pinned `rea-agents` package. `reafuse doctor` shows which REA version is active. Use `--no-rea` to skip REA analysis.
 
 **Does it copy code from the donors?**
-No. FrankenAgent learns behavior from REA evidence, READMEs and tests, then grows fresh code. The originality scan rejects creatures that contain copied donor code, even reformatted.
+No. ReaFuse learns behavior from REA evidence, READMEs and tests, then grows fresh code. The originality scan rejects creatures that contain copied donor code, even reformatted.
 
 **Can it reverse engineer websites and apps like REA does?**
 Not yet. v0.1 fuses source repositories. Websites and Electron apps through REA's analyzers are next on the roadmap.
@@ -177,7 +179,7 @@ v0.1 — JavaScript/TypeScript donors analysed with REA, library + CLI creatures
 
 ## Credits
 
-- **[REA — Reverse Engineer Anything](https://github.com/morluto/rea)** by morluto and contributors (MIT) is the reverse-engineering engine underneath FrankenAgent. FrankenAgent is independent and not affiliated with or endorsed by REA. Please star REA if this project is useful to you.
+- **[REA — Reverse Engineer Anything](https://github.com/morluto/rea)** by morluto and contributors (MIT) is the reverse-engineering engine underneath ReaFuse. ReaFuse is independent and not affiliated with or endorsed by REA. Please star REA if this project is useful to you.
 - Showcase donors: [ms](https://github.com/vercel/ms), [pretty-bytes](https://github.com/sindresorhus/pretty-bytes), [dequal](https://github.com/lukeed/dequal), [klona](https://github.com/lukeed/klona) — all MIT. No donor code is included in this repository.
 
 ## License

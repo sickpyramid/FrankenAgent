@@ -70,7 +70,7 @@ objdelta before.json after.json --json
 ## Provenance
 
 - Run: `202610131250-dequal-x-klona-5fb6`
-- FrankenAgent 0.1.0 · REA 6.4.0 · brain: handoff
-- Certificate: `53fbf8e8b3df12aa8862166a37e529e06821a0c848e045816d5fc3f7c9ac2f38`
+- ReaFuse 0.1.0 · REA 6.4.0 · brain: handoff
+- Certificate: `a543ade9fb45ae631d09d2d153b757ca9f0f4db76602d5fb473eafecd24bd30e`
 
 Behavior was learned from the donors; no donor code was copied or executed. Donors keep their own licenses and credit.
