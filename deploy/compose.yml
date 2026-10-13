@@ -1,0 +1,16 @@
+# Production: docker compose -f deploy/compose.yml up -d --build
+# The container listens only on the Docker bridge; a reverse proxy (Caddy) exposes it.
+services:
+  frankenagent:
+    build: ..
+    container_name: frankenagent
+    restart: unless-stopped
+    ports:
+      - "172.17.0.1:${FRANKEN_PORT:-8090}:4400"
+    volumes:
+      - franken_data:/data
+    mem_limit: 900m
+    environment:
+      FRANKEN_RUNS_PER_HOUR: ${FRANKEN_RUNS_PER_HOUR:-6}
+volumes:
+  franken_data:

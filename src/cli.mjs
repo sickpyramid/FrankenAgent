@@ -21,7 +21,8 @@ Usage
   franken doctor                             Check REA, git and brain availability
 
 Donors
-  A GitHub URL (https://github.com/owner/repo), owner/repo, or a local directory.
+  A GitHub URL, owner/repo, a local directory, a website (instagram.com) or a
+  product name ("Spotify"). Websites and names are resolved to open-source twins.
 
 Options
   --pick <n>          Which of the 3 proposed creatures to grow (default: ask, or 1)
@@ -32,6 +33,8 @@ Options
   --no-rea            Skip REA static analysis
   --allow-copyleft    Allow copyleft donors (behavior only)
   --owned             You own both donors (skips the license gate)
+  --await-pick        Stop after proposing creatures (exit code 4)
+  --no-local          Refuse local directories (for servers)
   -h, --help`;
 
 export async function main(argv) {
@@ -47,6 +50,8 @@ export async function main(argv) {
       "no-rea": { type: "boolean", default: false },
       "allow-copyleft": { type: "boolean", default: false },
       owned: { type: "boolean", default: false },
+      "await-pick": { type: "boolean", default: false },
+      "no-local": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
   });
@@ -65,6 +70,7 @@ export async function main(argv) {
       noRea: values["no-rea"],
       allowCopyleft: values["allow-copyleft"],
       owned: values.owned,
+      allowLocal: !values["no-local"],
       maxRepairs: values["max-repairs"] ? Number(values["max-repairs"]) : 2,
     });
     log.info(`Run: ${runDir}`);
@@ -145,8 +151,15 @@ async function advance(runDir, labDir, values) {
       labDir,
       brainProvider: values.brain,
       model: values.model,
-      interactive: process.stdin.isTTY && !values.pick,
+      interactive: process.stdin.isTTY && !values.pick && !values["await-pick"],
+      awaitPick: values["await-pick"],
     });
+    if (!report) {
+      process.stderr.write(`
+🧬 Three creatures proposed. Pick one with: franken resume "${runDir}" --pick <n>
+`);
+      return 4;
+    }
     const status = report.verdict.status;
     process.stderr.write(`\n══════════════════════════════════════\n  ${status}${report.creature ? ` — ${report.creature.name}` : ""}\n══════════════════════════════════════\n`);
     if (report.verdict.reason) process.stderr.write(`  ${report.verdict.reason}\n`);

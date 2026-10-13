@@ -72,3 +72,18 @@ export const CreatureFiles = z.object({
   files: z.array(File),
   summary: z.string().describe("What was built or changed, in 1-3 sentences."),
 });
+
+export const Resolution = z.object({
+  product: z.string().describe("The product the user meant, e.g. Spotify."),
+  essence: z.string().describe("The core user-facing capabilities of that product, in one sentence."),
+  candidates: z
+    .array(
+      z.object({
+        repo: z.string().describe("GitHub owner/name of an existing open-source project."),
+        why: z.string().describe("Which of the product's capabilities this project replicates."),
+        language: z.string(),
+        license: z.string().describe("SPDX id if known, else unknown."),
+      }),
+    )
+    .describe("3-5 real, public GitHub repositories, best first. Prefer JavaScript/TypeScript, permissive licenses, and small focused codebases over huge monorepos."),
+});

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FrankenAgent Lab</title>
+  <meta name="description" content="FrankenAgent — built on REA (Reverse Engineer Anything). Stitch two apps, repos or websites into a brand-new verified creature, live.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="crt" aria-hidden="true"></div>
+  <div class="flash" id="flash" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="brand" href="/" aria-label="FrankenAgent home">
+      <span class="bolt">⚡</span><span class="glitch" data-text="FRANKEN//AGENT">FRANKEN//AGENT</span>
+    </a>
+    <nav class="status" id="status">
+      <span class="pill" id="st-brain"><i class="led"></i>brain: …</span>
+      <span class="pill" id="st-rea"><i class="led on"></i>REA …</span>
+      <span class="pill" id="st-queue"><i class="led"></i>queue …</span>
+      <a class="pill link" href="https://github.com/sickpyramid/FrankenAgent" target="_blank" rel="noopener">★ github</a>
+    </nav>
+  </header>
+
+  <main id="app">
+    <!-- HOME -->
+    <section id="home" class="view">
+      <div class="hero">
+        <pre class="ascii" aria-hidden="true">
+   ___________
+  |  _______  |      .-""""-.
+  | |  O O  | |     /  _  _  \       $ rea analyze-javascript-application ./subject-a
+  | |   ^   | |    |  (o)(o)  |      $ rea analyze-javascript-application ./subject-b
+  | |  ===  | |    |    __    |      $ franken fuse A B --verify --clean-room
+  |_|_______|_|     \ '----' /       > IT'S ALIVE
+  ]=[  ]=[  ]=[      '-.__.-'
+        </pre>
+        <h1>Stitch two apps into <em>one new creature</em>.</h1>
+        <p class="sub">Feed the lab two subjects: a <b>repo</b>, a <b>link</b> or just an <b>app name</b>. FrankenAgent dissects both with
+          <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA&nbsp;(Reverse&nbsp;Engineer&nbsp;Anything)</a>,
+          fuses their organs, grows fresh code and puts it on the operating table until it <b>lives</b>, or doesn't.</p>
+      </div>
+
+      <form id="fuse-form" class="table" autocomplete="off">
+        <div class="slab" data-label="A">
+          <div class="slab-head"><span class="tag">SUBJECT_A</span><span class="kind" id="kind-a">awaiting specimen</span></div>
+          <input id="donor-a" name="a" maxlength="200" placeholder="Spotify · vercel/ms · github.com/…" required>
+          <div class="chips" data-for="donor-a">
+            <button type="button">vercel/ms</button><button type="button">lukeed/dequal</button><button type="button">Spotify</button>
+          </div>
+        </div>
+
+        <div class="stitch" aria-hidden="true">
+          <span>⚡</span><span class="x">×</span><span>⚡</span>
+        </div>
+
+        <div class="slab" data-label="B">
+          <div class="slab-head"><span class="tag">SUBJECT_B</span><span class="kind" id="kind-b">awaiting specimen</span></div>
+          <input id="donor-b" name="b" maxlength="200" placeholder="Instagram · lukeed/klona · site.com" required>
+          <div class="chips" data-for="donor-b">
+            <button type="button">sindresorhus/pretty-bytes</button><button type="button">lukeed/klona</button><button type="button">Instagram</button>
+          </div>
+        </div>
+
+        <button class="lever" id="fuse-btn" type="submit"><span>PULL THE LEVER</span><small>// fuse --verify</small></button>
+        <p class="form-msg" id="form-msg" role="status"></p>
+      </form>
+
+      <section class="how">
+        <h2><span class="hash">#</span> the procedure</h2>
+        <ol class="steps">
+          <li><b>resolve</b> app names → open-source twins</li>
+          <li><b>intake</b> clone + license gate</li>
+          <li><b>dissect</b> REA static analysis → spec cards</li>
+          <li><b>fuse</b> 3 creature concepts, you pick</li>
+          <li><b>contract</b> tests written before birth</li>
+          <li><b>grow</b> fresh code, zero deps</li>
+          <li><b>verify</b> sandboxed tests + repairs</li>
+          <li><b>originality</b> clean-room scan</li>
+        </ol>
+      </section>
+
+      <section class="gallery-wrap">
+        <h2><span class="hash">#</span> specimens that lived</h2>
+        <div class="gallery" id="gallery"><p class="dim">loading specimens…</p></div>
+      </section>
+    </section>
+
+    <!-- RUN -->
+    <section id="run" class="view" hidden>
+      <div class="run-head">
+        <a href="/" class="back">← new experiment</a>
+        <h1 class="run-title"><span id="run-a">A</span> <span class="x">×</span> <span id="run-b">B</span></h1>
+        <code class="run-id" id="run-id"></code>
+      </div>
+
+      <ol class="rail" id="rail">
+        <li data-stage="intake">intake</li>
+        <li data-stage="dissect-a">dissect A</li>
+        <li data-stage="dissect-b">dissect B</li>
+        <li data-stage="fuse">fuse</li>
+        <li data-stage="pick">pick</li>
+        <li data-stage="contract">contract</li>
+        <li data-stage="grow">grow</li>
+        <li data-stage="verify">verify</li>
+        <li data-stage="originality">originality</li>
+        <li data-stage="verdict">verdict</li>
+      </ol>
+
+      <div class="grid">
+        <div class="term">
+          <div class="term-bar"><i></i><i></i><i></i><span>lab.log: live</span><span class="elapsed" id="elapsed"></span></div>
+          <pre id="log" aria-live="polite"></pre>
+        </div>
+
+        <aside class="side">
+          <div class="donor-cards" id="donor-cards"></div>
+        </aside>
+      </div>
+
+      <section id="pick" class="pick" hidden>
+        <h2><span class="hash">#</span> choose the creature to grow</h2>
+        <div class="concepts" id="concepts"></div>
+      </section>
+
+      <section id="verdict" class="verdict" hidden>
+        <div class="banner" id="banner"></div>
+        <div class="stats" id="stats"></div>
+        <div class="tabs">
+          <button type="button" data-tab="report" class="on">REPORT.md</button>
+          <button type="button" data-tab="files">creature/</button>
+        </div>
+        <div class="tab" id="tab-report"><article class="md" id="report"></article></div>
+        <div class="tab" id="tab-files" hidden>
+          <div class="files"><ul id="file-list"></ul><pre id="file-view" class="code">select a file</pre></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>FrankenAgent is built on <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA: Reverse Engineer Anything</a> · independent, not affiliated</span>
+    <span>learns behavior, never copies code · MIT</span>
+  </footer>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

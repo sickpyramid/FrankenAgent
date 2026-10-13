@@ -125,6 +125,16 @@ franken doctor                              # check REA, git and brain availabil
 
 Donors can be GitHub URLs, `owner/repo` shorthand or local directories. Websites and binaries are on the roadmap.
 
+### Web lab
+
+Type two subjects side by side, such as a repo, a link or just an app name like `Spotify` × `Instagram`, and watch the fusion live. App names and websites are resolved to open-source twins before REA dissects them.
+
+```bash
+node web/server.mjs                                   # http://localhost:4400
+docker compose -f deploy/compose.yml up -d --build    # production (Claude CLI inside)
+docker exec -it frankenagent claude                   # one-time login for the lab's brain
+```
+
 ### Choosing a brain
 
 | Brain | How | When |

@@ -115,3 +115,15 @@ ${failures}
 ## Current creature files
 ${files.map((file) => `### ${file.path}\n${file.content}`).join("\n\n")}`;
 }
+
+export function resolvePrompt(input, kind) {
+  return `A user wants to use "${input}" (${kind === "website" ? "a website" : "a product name"}) as a donor.
+
+FrankenAgent never dissects closed-source products. Instead, find open-source "twins": existing public GitHub projects that implement the same core capabilities, so the product's ideas can be learned legally from open code.
+
+Rules:
+- Only list repositories you are confident exist on GitHub, as owner/name.
+- Prefer JavaScript or TypeScript projects with permissive licenses (MIT, Apache-2.0, BSD, ISC).
+- Prefer focused libraries or small apps that capture the product's signature capability over giant platforms.
+- If "${input}" is itself an open-source project, list its own repository first.`;
+}

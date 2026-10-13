@@ -31,6 +31,7 @@ export async function writeReport(runDir, state, details) {
           input: donor.input,
           name: donor.name,
           url: donor.url ?? null,
+          resolvedFrom: donor.resolution ? { input: donor.resolution.from, tier: donor.resolution.tier, why: donor.resolution.why } : null,
           commit: donor.commit,
           license: donor.license?.spdx ?? null,
           gate: donor.gate,
@@ -87,7 +88,8 @@ export function renderMarkdown(report) {
   lines.push("## Donors", "", "| | Donor | Commit | License | Gate |", "|---|---|---|---|---|");
   for (const [label, donor] of Object.entries(donors)) {
     const where = donor.url ? `[${donor.name}](${donor.url.replace(/\.git$/, "")})` : donor.name;
-    lines.push(`| ${label} | ${where} | \`${donor.commit?.slice(0, 10) ?? "local"}\` | ${donor.license ?? "unknown"} | ${donor.gate.ok ? "✅" : "❌"} ${donor.gate.reason} |`);
+    const via = donor.resolvedFrom ? ` (twin of "${donor.resolvedFrom.input}")` : "";
+    lines.push(`| ${label} | ${where}${via} | \`${donor.commit?.slice(0, 10) ?? "local"}\` | ${donor.license ?? "unknown"} | ${donor.gate.ok ? "✅" : "❌"} ${donor.gate.reason} |`);
   }
   lines.push("");
 

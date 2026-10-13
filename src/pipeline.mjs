@@ -3,15 +3,15 @@ import { createRequire } from "node:module";
 import { basename, join, relative, sep } from "node:path";
 import { createInterface } from "node:readline/promises";
 
-import { acquireTarget } from "./acquire.mjs";
+import { acquireTarget, classifyTarget, repositoryExists } from "./acquire.mjs";
 import { createBrain } from "./brain.mjs";
 import { licenseGate } from "./license.mjs";
 import { checkOriginality } from "./originality.mjs";
 import { listSourceFiles, profileDonor } from "./profile.mjs";
-import { contractPrompt, fusePrompt, growPrompt, repairPrompt, specPrompt, SYSTEM } from "./prompts.mjs";
+import { contractPrompt, fusePrompt, growPrompt, repairPrompt, resolvePrompt, specPrompt, SYSTEM } from "./prompts.mjs";
 import { analyzeWithRea, reaVersion, summarizeReaEvidence } from "./rea.mjs";
 import { writeReport } from "./report.mjs";
-import { Contract, CreatureFiles, FusionProposals, SpecCard } from "./schemas.mjs";
+import { Contract, CreatureFiles, FusionProposals, Resolution, SpecCard } from "./schemas.mjs";
 import { exists, log, newRunId, readJson, safeJoin, slugify, truncate, writeJson, writeText } from "./util.mjs";
 import { verdictFor, verifyCreature } from "./verify.mjs";
 
@@ -40,7 +40,7 @@ export async function createRun(labDir, donorA, donorB, options) {
  * Advances a run as far as possible. Every stage persists its output, so the
  * same call resumes a run after a handoff, a crash or a changed --pick.
  */
-export async function advanceRun(runDir, { labDir, brainProvider, model, interactive = false } = {}) {
+export async function advanceRun(runDir, { labDir, brainProvider, model, interactive = false, awaitPick = false } = {}) {
   const statePath = join(runDir, "run.json");
   const state = await readJson(statePath);
   const save = () => writeJson(statePath, state);
@@ -57,11 +57,15 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   if (!state.donors) {
     const donors = {};
     for (const label of ["A", "B"]) {
-      const donor = await acquireTarget(state.inputs[label], join(labDir, "cache"));
+      const input = state.inputs[label];
+      const resolution = await resolveDonor(brain, label, input);
+      const donor = await acquireTarget(resolution?.repoUrl ?? input, join(labDir, "cache"), {
+        allowLocal: state.options.allowLocal !== false,
+      });
       const profile = await profileDonor(donor.path);
       await writeJson(join(runDir, "donors", `${label}.profile.json`), profile);
       const gate = licenseGate(profile.license, state.options);
-      donors[label] = { ...donor, packageName: profile.name, license: profile.license, gate };
+      donors[label] = { ...donor, input, resolution, packageName: profile.name, license: profile.license, gate };
       log.info(`${label}: ${donor.name} @ ${donor.commit?.slice(0, 10) ?? "local"} — license ${profile.license.spdx ?? "unknown"} ${gate.ok ? "✓" : "✗"}`);
     }
     state.donors = donors;
@@ -70,6 +74,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   const failedGate = ["A", "B"].find((label) => !state.donors[label].gate.ok);
   if (failedGate) {
     state.verdict = { status: "REJECTED", reason: `Donor ${failedGate}: ${state.donors[failedGate].gate.reason}` };
+    state.phase = "done";
     await save();
     return finish(runDir, state);
   }
@@ -109,10 +114,17 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   log.step("Fusing: proposing creatures");
   const { proposals } = await brain.ask({ stage: "fuse", system: SYSTEM, prompt: fusePrompt(specs.A, specs.B), schema: FusionProposals });
   proposals.forEach((proposal, index) => log.info(`${index + 1}. ${proposal.name} — ${proposal.tagline}`));
+  if (!state.pick && awaitPick) {
+    state.phase = "awaiting-pick";
+    await save();
+    log.step("Awaiting your pick");
+    return { runDir, state, report: null, awaitingPick: true };
+  }
   if (!state.pick) {
     state.pick = interactive ? await askPick(proposals.length) : 1;
-    await save();
   }
+  state.phase = "growing";
+  await save();
   const proposal = proposals[state.pick - 1];
   if (!proposal) throw new Error(`--pick ${state.pick} is out of range (1-${proposals.length}).`);
   proposal.name = slugify(proposal.name, 60);
@@ -175,6 +187,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   log.info(`overlap ${(originality.overlap * 100).toFixed(1)}%, longest shared run ${originality.longestCopiedTokens} tokens → ${originality.passed ? "original" : "BREACH"}`);
 
   const status = originality.passed ? verdictFor(results) : "REJECTED";
+  state.phase = "done";
   state.verdict = {
     status,
     reason: originality.passed ? null : "Clean-room breach: the creature contains code copied from a donor.",
@@ -184,6 +197,34 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   };
   await save();
   return finish(runDir, state, { specs, proposals, proposal, contract, results, originality });
+}
+
+/**
+ * Names ("Spotify") and websites ("instagram.com") are never dissected
+ * directly. The brain proposes open-source twins; the first one that really
+ * exists on GitHub becomes the donor.
+ */
+async function resolveDonor(brain, label, input) {
+  const target = classifyTarget(input);
+  if (target.kind !== "name" && target.kind !== "website") return null;
+  log.info(`${label}: "${input}" is ${target.kind === "name" ? "a name" : "a website"} — searching for an open-source twin…`);
+  const answer = await brain.ask({
+    stage: `resolve-${label}`,
+    system: SYSTEM,
+    prompt: resolvePrompt(input, target.kind),
+    schema: Resolution,
+  });
+  for (const candidate of answer.candidates) {
+    const repo = candidate.repo.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").trim();
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
+    const repoUrl = `https://github.com/${repo}.git`;
+    if (await repositoryExists(repoUrl)) {
+      log.info(`${label}: twin found → ${repo} (${candidate.why})`);
+      return { tier: "twin", from: input, product: answer.product, essence: answer.essence, repo, repoUrl, why: candidate.why };
+    }
+    log.warn(`${label}: ${repo} does not exist, trying the next twin`);
+  }
+  throw new Error(`No open-source twin found for "${input}". Try a repository URL instead.`);
 }
 
 async function finish(runDir, state, details = {}) {

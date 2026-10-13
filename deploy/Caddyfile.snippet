@@ -1,0 +1,8 @@
+# FrankenAgent web lab (append to the host's Caddyfile)
+franken.140-82-32-12.sslip.io {
+  encode gzip
+  header -Server
+  reverse_proxy 172.17.0.1:8090 {
+    flush_interval -1
+  }
+}

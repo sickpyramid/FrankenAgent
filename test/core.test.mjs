@@ -21,10 +21,15 @@ test("classifyTarget recognises git hosts, shorthand, websites and local paths",
   assert.equal(classifyTarget("vercel/ms").kind, "maybe-github");
   assert.equal(classifyTarget("https://example.com/app").kind, "website");
   assert.equal(classifyTarget("./some/dir").kind, "local");
+  assert.equal(classifyTarget("Spotify").kind, "name");
+  assert.equal(classifyTarget("instagram.com").kind, "website");
+  assert.equal(classifyTarget("https://github.com/lukeed/klona/tree/main").url, "https://github.com/lukeed/klona.git");
 });
 
-test("acquireTarget rejects websites in v1 with a clear message", async () => {
-  await assert.rejects(acquireTarget("https://example.com", tmpdir()), /Website donors are planned/);
+test("acquireTarget refuses names, websites, and (on servers) local paths", async () => {
+  await assert.rejects(acquireTarget("https://example.com", tmpdir()), /not a repository/);
+  await assert.rejects(acquireTarget("Spotify", tmpdir()), /open-source twin/);
+  await assert.rejects(acquireTarget(join(fixtures, "donor-mit"), tmpdir(), { allowLocal: false }), /disabled/);
 });
 
 test("acquireTarget accepts a local donor without treating a parent repo as its own", async () => {
