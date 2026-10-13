@@ -14,44 +14,45 @@ async function api(path, options = {}) {
   return body;
 }
 
-function zap() {
-  const flash = $("#flash");
-  flash.classList.remove("go");
-  void flash.offsetWidth;
-  flash.classList.add("go");
+/** Sends a pulse of current through the fuse on the home board. */
+function surge(ms = 1400) {
+  const board = $("#fuse-form");
+  board.classList.add("surge");
+  setTimeout(() => board.classList.remove("surge"), ms);
 }
 
-// ── status bar ─────────────────────────────────────────────────────────────
+// ── status plates ──────────────────────────────────────────────────────────
 async function refreshStatus() {
   try {
     const status = await api("status");
     const brain = status.brain;
-    $("#st-brain").innerHTML = `<i class="led ${brain.ready ? "on" : "off"}"></i>brain: ${esc(brain.ready ? brain.provider : "offline")}`;
+    $("#st-brain").innerHTML = `<i class="dot ${brain.ready ? "ok" : "bad"}"></i>BRAIN ${brain.ready ? "READY" : "OFFLINE"}`;
     $("#st-brain").title = brain.detail;
-    $("#st-rea").innerHTML = `<i class="led on"></i>REA ${esc(status.rea ?? "?")}`;
-    $("#st-queue").innerHTML = `<i class="led ${status.running ? "warn" : "on"}"></i>${status.running ? "operating" : "idle"} · queue ${status.queue}`;
+    $("#st-rea").textContent = `REA ${status.rea ?? "?"}`;
+    $("#st-queue").innerHTML = `<i class="dot ${status.running ? "busy" : "ok"}"></i>${status.running ? "FUSING" : "IDLE"} · Q${status.queue}`;
   } catch {
-    $("#st-brain").innerHTML = `<i class="led off"></i>lab unreachable`;
+    $("#st-brain").innerHTML = `<i class="dot bad"></i>LAB UNREACHABLE`;
   }
 }
 
-// ── donor kind hints (mirrors the server classifier) ────────────────────────
+// ── terminals ──────────────────────────────────────────────────────────────
 function kindOf(text) {
   const value = text.trim();
-  if (!value) return ["awaiting specimen", false];
-  if (/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitlab\.com|codeberg\.org|bitbucket\.org)\/[\w.-]+\/[\w.-]+/i.test(value)) return ["◆ git repository", true];
-  if (/^https?:\/\//i.test(value) || /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/.*)?$/i.test(value)) return ["◇ website → twin search", true];
-  if (/^[\w.-]+\/[\w.-]+$/.test(value)) return ["◆ github owner/repo", true];
-  return ["◎ app name → twin search", true];
+  if (!value) return "EMPTY";
+  if (/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitlab\.com|codeberg\.org|bitbucket\.org)\/[\w.-]+\/[\w.-]+/i.test(value)) return "REPO";
+  if (/^https?:\/\//i.test(value) || /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/.*)?$/i.test(value)) return "SITE → TWIN";
+  if (/^[\w.-]+\/[\w.-]+$/.test(value)) return "REPO";
+  return "NAME → TWIN";
 }
 
-function wireSlab(inputId, kindId) {
+function wireTerminal(inputId, kindId, side) {
   const input = $(`#${inputId}`);
   const kind = $(`#${kindId}`);
   const update = () => {
-    const [label, ok] = kindOf(input.value);
+    const label = kindOf(input.value);
     kind.textContent = label;
-    kind.classList.toggle("ok", ok);
+    kind.classList.toggle("set", label !== "EMPTY");
+    $("#fuse-form").classList.toggle(`has-${side}`, label !== "EMPTY");
   };
   input.addEventListener("input", update);
   $$(`.chips[data-for="${inputId}"] button`).forEach((button) =>
@@ -61,30 +62,35 @@ function wireSlab(inputId, kindId) {
       input.focus();
     }),
   );
+  update();
 }
 
 // ── home ───────────────────────────────────────────────────────────────────
 async function loadGallery() {
+  const gallery = $("#gallery");
   try {
     const { items } = await api("gallery");
-    const gallery = $("#gallery");
     if (!items.length) {
-      gallery.innerHTML = `<p class="dim">no specimens yet: be the first to pull the lever.</p>`;
+      gallery.innerHTML = `<p class="mute">No parts yet. Be the first to throw the switch.</p>`;
       return;
     }
     gallery.innerHTML = items
-      .map(
-        (item) => `<a class="specimen" href="/run/${encodeURIComponent(item.id)}" data-link>
-          <span class="badge ${esc(item.verdict)}">${esc(item.verdict)}</span>
-          <h3>${esc(item.name)}</h3>
-          <p>${esc(item.tagline)}</p>
-          <div class="lineage">${esc(item.donors.A)} × ${esc(item.donors.B)}</div>
-          <div class="meta">${item.contract ? `<span class="badge">contract ${esc(item.contract)}</span>` : ""}${item.overlap !== null ? `<span class="badge">overlap ${(item.overlap * 100).toFixed(1)}%</span>` : ""}${item.showcase ? `<span class="badge">showcase</span>` : ""}</div>
-        </a>`,
-      )
+      .map((item, index) => {
+        const part = `RF-${String(items.length - index).padStart(4, "0")}`;
+        return `<a class="part" href="/run/${encodeURIComponent(item.id)}" data-link>
+          <div class="part-head"><span>${part}</span><span>${item.showcase ? "SHOWCASE" : esc(new Date(item.createdAt).toISOString().slice(0, 10))}</span></div>
+          <span class="mini-stamp ${esc(item.verdict)}">${esc(item.verdict)}</span>
+          <div class="part-body">
+            <h3>${esc(item.name)}</h3>
+            <p>${esc(item.tagline)}</p>
+          </div>
+          <div class="lineage"><span class="la">A · ${esc(item.donors.A)}</span><span class="lb">B · ${esc(item.donors.B)}</span></div>
+          <div class="part-foot">${item.contract ? `<span>CONTRACT ${esc(item.contract)}</span>` : ""}${item.overlap !== null ? `<span>OVERLAP ${(item.overlap * 100).toFixed(1)}%</span>` : ""}</div>
+        </a>`;
+      })
       .join("");
   } catch (error) {
-    $("#gallery").innerHTML = `<p class="dim">gallery offline: ${esc(error.message)}</p>`;
+    gallery.innerHTML = `<p class="mute">Catalog offline: ${esc(error.message)}</p>`;
   }
 }
 
@@ -94,14 +100,14 @@ $("#fuse-form").addEventListener("submit", async (event) => {
   const message = $("#form-msg");
   message.textContent = "";
   button.disabled = true;
+  surge(2400);
   try {
     const { id } = await api("fuse", { method: "POST", body: JSON.stringify({ a: $("#donor-a").value, b: $("#donor-b").value }) });
-    zap();
-    navigate(`/run/${encodeURIComponent(id)}`);
+    setTimeout(() => navigate(`/run/${encodeURIComponent(id)}`), 650);
   } catch (error) {
-    message.textContent = `✗ ${error.message}`;
+    message.textContent = `✕ ${error.message}`;
   } finally {
-    button.disabled = false;
+    setTimeout(() => (button.disabled = false), 700);
   }
 });
 
@@ -120,7 +126,7 @@ const MARKERS = [
   [/═{10,}/, "verdict"],
 ];
 
-let current = null; // { id, source, timer, stage, started }
+let current = null;
 
 function setStage(stage, { failed = false } = {}) {
   const index = STAGES.indexOf(stage);
@@ -146,19 +152,22 @@ function appendLog(text) {
 }
 
 function renderDonors(view) {
-  const cards = ["A", "B"].map((label) => {
-    const donor = view.donors?.[label];
-    const spec = view.specs?.[label];
-    const input = view.inputs?.[label] ?? "?";
-    return `<div class="donor-card">
-      <h4>SUBJECT_${label}</h4>
-      <div class="name">${esc(donor?.name ?? input)}</div>
-      ${donor?.resolution ? `<div class="twin">twin of “${esc(donor.resolution.from)}”: ${esc(donor.resolution.why)}</div>` : ""}
-      ${donor ? `<div class="dim">${esc(donor.license ?? "license ?")} · ${esc(donor.commit?.slice(0, 10) ?? "")}</div>` : `<div class="dim">awaiting intake…</div>`}
-      ${spec ? `<div>${esc(spec.oneLiner)}</div><ul>${spec.capabilities.map((c) => `<li>${esc(c.name)}</li>`).join("")}</ul>` : ""}
-    </div>`;
-  });
-  $("#donor-cards").innerHTML = cards.join("");
+  $("#donor-cards").innerHTML = ["A", "B"]
+    .map((label) => {
+      const donor = view.donors?.[label];
+      const spec = view.specs?.[label];
+      const input = view.inputs?.[label] ?? "?";
+      return `<div class="sheet ${label.toLowerCase()}">
+        <div class="sheet-head"><span>DATASHEET · TERMINAL ${label}</span><span>${donor ? "LOADED" : "PENDING"}</span></div>
+        <div class="sheet-body">
+          <div class="sheet-name">${esc(donor?.name ?? input)}</div>
+          ${donor?.resolution ? `<div class="twin">Twin of “${esc(donor.resolution.from)}”: ${esc(donor.resolution.why)}</div>` : ""}
+          ${donor ? `<dl><dt>license</dt><dd>${esc(donor.license ?? "unknown")}</dd><dt>commit</dt><dd>${esc(donor.commit?.slice(0, 10) ?? "local")}</dd></dl>` : `<p class="mute">Awaiting intake…</p>`}
+          ${spec ? `<p>${esc(spec.oneLiner)}</p><ul>${spec.capabilities.map((c) => `<li>${esc(c.name)}</li>`).join("")}</ul>` : ""}
+        </div>
+      </div>`;
+    })
+    .join("");
 }
 
 function renderPick(view) {
@@ -168,12 +177,12 @@ function renderPick(view) {
   $("#concepts").innerHTML = view.proposals
     .map(
       (p, i) => `<button type="button" class="concept" data-pick="${i + 1}">
-        <span class="num">#${i + 1}</span>
+        <span class="num">0${i + 1}</span>
         <h3>${esc(p.name)}</h3>
         <p class="tagline">${esc(p.tagline)}</p>
-        <p class="dim">${esc(p.concept)}</p>
-        <p class="new">⚡ ${esc(p.newCapability)}</p>
-        <div>${p.api.map((fn) => `<code>${esc(fn.name)}()</code>`).join(" ")}</div>
+        <p class="desc">${esc(p.concept)}</p>
+        <p class="new"><b>Only possible fused:</b> ${esc(p.newCapability)}</p>
+        <div class="api">${p.api.map((fn) => `<code>${esc(fn.name)}()</code>`).join("")}</div>
       </button>`,
     )
     .join("");
@@ -182,11 +191,10 @@ function renderPick(view) {
       $$("#concepts .concept").forEach((b) => (b.disabled = true));
       try {
         await api(`runs/${encodeURIComponent(current.id)}/pick`, { method: "POST", body: JSON.stringify({ pick: Number(button.dataset.pick) }) });
-        zap();
         $("#pick").hidden = true;
         setStage("contract");
       } catch (error) {
-        appendLog(`\n✗ ${error.message}\n`);
+        appendLog(`\n✕ ${error.message}\n`);
         $$("#concepts .concept").forEach((b) => (b.disabled = false));
       }
     }),
@@ -198,16 +206,19 @@ function renderVerdict(view) {
   $("#verdict").hidden = !report;
   if (!report) return;
   const status = report.verdict.status;
-  const words = { ALIVE: "IT'S ALIVE!!!", UNSTABLE: "UNSTABLE…", DEAD: "IT DIDN'T WAKE UP", REJECTED: "ORGAN REJECTED" };
-  $("#banner").className = `banner ${status}`;
-  $("#banner").innerHTML = `${esc(words[status] ?? status)}<small>${esc(report.creature ? `${report.creature.name}: ${report.creature.tagline}` : report.verdict.reason ?? "")}</small>`;
+  const words = { ALIVE: "Alive", UNSTABLE: "Unstable", DEAD: "Blown", REJECTED: "Rejected" };
+  $("#banner").className = `stamp ${status}`;
+  $("#banner").textContent = words[status] ?? status;
+  $("#verdict-info").innerHTML = report.creature
+    ? `<h3>${esc(report.creature.name)}</h3><p>${esc(report.creature.tagline)}</p>${report.verdict.reason ? `<p><b>${esc(report.verdict.reason)}</b></p>` : ""}<div class="cert">CERTIFICATE ${esc(report.certificate)}</div>`
+    : `<h3>No creature</h3><p>${esc(report.verdict.reason ?? "")}</p><div class="cert">CERTIFICATE ${esc(report.certificate)}</div>`;
   const v = report.verification;
   const stats = [
-    v && [`${v.contract.passed}/${v.contract.total}`, "lab contract"],
-    v && [`${v.own.passed}/${v.own.total}`, "creature's own tests"],
-    report.originality && [`${(report.originality.overlap * 100).toFixed(1)}%`, "code overlap with donors"],
-    report.originality && [report.originality.longestCopiedTokens, "longest shared token run"],
-    [report.rea ? `REA ${report.rea}` : "REA", "dissection engine"],
+    v && [`${v.contract.passed}/${v.contract.total}`, "Lab contract"],
+    v && [`${v.own.passed}/${v.own.total}`, "Own tests"],
+    report.originality && [`${(report.originality.overlap * 100).toFixed(1)}%`, "Code overlap"],
+    report.originality && [report.originality.longestCopiedTokens, "Longest shared run"],
+    [report.rea ?? "—", "REA version"],
   ].filter(Boolean);
   $("#stats").innerHTML = stats.map(([value, label]) => `<div class="stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`).join("");
   $("#report").innerHTML = markdown(view.reportMarkdown ?? "");
@@ -223,7 +234,7 @@ function renderVerdict(view) {
 }
 
 async function refreshRun() {
-  if (!current) return;
+  if (!current) return null;
   const view = await api(`runs/${encodeURIComponent(current.id)}`);
   const title = (label) => {
     const input = view.inputs?.[label] ?? label;
@@ -233,16 +244,14 @@ async function refreshRun() {
   $("#run-b").textContent = title("B");
   renderDonors(view);
   renderPick(view);
-  const hadVerdict = !$("#verdict").hidden;
   renderVerdict(view);
-  if (view.report && !hadVerdict && !current.replayed) zap();
   if (view.phase === "awaiting-pick") setStage("pick");
   return view;
 }
 
 async function openRun(id) {
   closeRun();
-  current = { id, stage: "intake", started: Date.now(), replayed: false };
+  current = { id, stage: "intake", started: Date.now() };
   $("#home").hidden = true;
   $("#run").hidden = false;
   $("#log").textContent = "";
@@ -253,17 +262,16 @@ async function openRun(id) {
   window.scrollTo(0, 0);
 
   const view = await refreshRun().catch((error) => {
-    appendLog(`✗ ${error.message}\n`);
+    appendLog(`✕ ${error.message}\n`);
     return null;
   });
   if (!view) return;
+  $("#log").style.height = view.showcase ? "auto" : "";
   if (view.showcase) {
-    current.replayed = true;
-    appendLog(`# showcase specimen: grown earlier and verified.\n# the lab report and creature files are below.\n`);
+    appendLog(`# Showcase part: fused, grown and verified earlier.\n# The lab report and the creature's files are below.\n`);
     setStage("verdict");
     return;
   }
-  if (view.report) current.replayed = true;
 
   const source = new EventSource(`/api/runs/${encodeURIComponent(id)}/stream`);
   current.source = source;
@@ -288,7 +296,7 @@ function closeRun() {
   current = null;
 }
 
-// ── tiny markdown renderer (headings, tables, lists, code, quotes, links) ──
+// ── tiny markdown renderer ─────────────────────────────────────────────────
 function inline(text) {
   return esc(text)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -356,7 +364,7 @@ function route() {
 }
 
 document.addEventListener("click", (event) => {
-  const link = event.target.closest("a[data-link], a.back, a.brand");
+  const link = event.target.closest("a[data-link], a.back, a.mark");
   if (link && link.origin === location.origin) {
     event.preventDefault();
     navigate(link.pathname);
@@ -364,8 +372,8 @@ document.addEventListener("click", (event) => {
 });
 window.addEventListener("popstate", route);
 
-wireSlab("donor-a", "kind-a");
-wireSlab("donor-b", "kind-b");
+wireTerminal("donor-a", "kind-a", "a");
+wireTerminal("donor-b", "kind-b", "b");
 refreshStatus();
 setInterval(refreshStatus, 30_000);
 route();

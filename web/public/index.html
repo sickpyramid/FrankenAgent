@@ -3,146 +3,163 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ReaFuse Lab</title>
-  <meta name="description" content="ReaFuse — built on REA (Reverse Engineer Anything). Stitch two apps, repos or websites into a brand-new verified creature, live.">
+  <title>ReaFuse</title>
+  <meta name="description" content="ReaFuse: built on REA (Reverse Engineer Anything). Wire two apps, repos or websites into a fuse and get one brand-new, verified piece of software out.">
+  <meta name="theme-color" content="#ECE8DF">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="crt" aria-hidden="true"></div>
-  <div class="flash" id="flash" aria-hidden="true"></div>
-
-  <header class="top">
-    <a class="brand" href="/" aria-label="ReaFuse home">
-      <span class="bolt">⚡</span><span class="glitch" data-text="REA//FUSE">REA//FUSE</span>
+  <header class="bar">
+    <a class="mark" href="/" aria-label="ReaFuse home">
+      <svg class="mark-fuse" viewBox="0 0 56 20" aria-hidden="true">
+        <rect x="1" y="3" width="10" height="14" rx="1.5" class="cap"/>
+        <rect x="11" y="5" width="34" height="10" class="glass"/>
+        <path d="M11 10h5l2-3 3 6 3-6 3 6 3-6 3 6 3-6 2 3h5" class="wire-f"/>
+        <rect x="45" y="3" width="10" height="14" rx="1.5" class="cap"/>
+      </svg>
+      <span>REA<b>FUSE</b></span>
     </a>
-    <nav class="status" id="status">
-      <span class="pill" id="st-brain"><i class="led"></i>brain: …</span>
-      <span class="pill" id="st-rea"><i class="led on"></i>REA …</span>
-      <span class="pill" id="st-queue"><i class="led"></i>queue …</span>
-      <a class="pill link" href="https://github.com/sickpyramid/ReaFuse" target="_blank" rel="noopener">★ github</a>
+    <nav class="plates" aria-label="Lab status">
+      <span class="plate" id="st-brain"><i class="dot"></i>BRAIN —</span>
+      <span class="plate" id="st-rea">REA —</span>
+      <span class="plate" id="st-queue">QUEUE —</span>
+      <a class="plate link" href="https://github.com/sickpyramid/ReaFuse" target="_blank" rel="noopener">GITHUB ↗</a>
     </nav>
   </header>
 
   <main id="app">
-    <!-- HOME -->
+    <!-- HOME ─────────────────────────────────────────────── -->
     <section id="home" class="view">
       <div class="hero">
-        <pre class="ascii" aria-hidden="true">
-   ___________
-  |  _______  |      .-""""-.
-  | |  O O  | |     /  _  _  \       $ rea analyze-javascript-application ./subject-a
-  | |   ^   | |    |  (o)(o)  |      $ rea analyze-javascript-application ./subject-b
-  | |  ===  | |    |    __    |      $ reafuse fuse A B --verify --clean-room
-  |_|_______|_|     \ '----' /       > IT'S ALIVE
-  ]=[  ]=[  ]=[      '-.__.-'
-        </pre>
-        <h1>Stitch two apps into <em>one new creature</em>.</h1>
-        <p class="sub">Feed the lab two subjects: a <b>repo</b>, a <b>link</b> or just an <b>app name</b>. ReaFuse dissects both with
-          <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA&nbsp;(Reverse&nbsp;Engineer&nbsp;Anything)</a>,
-          fuses their organs, grows fresh code and puts it on the operating table until it <b>lives</b>, or doesn't.</p>
+        <p class="kicker">Built on <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA: Reverse Engineer Anything</a></p>
+        <h1>Two apps in.<br><span class="hl">One new thing</span> out.</h1>
+        <p class="lede">Wire any two repos, links or app names into the fuse. ReaFuse reverse engineers both with REA, fuses their capabilities, writes fresh code and tests it until it holds current, or blows.</p>
       </div>
 
-      <form id="fuse-form" class="table" autocomplete="off">
-        <div class="slab" data-label="A">
-          <div class="slab-head"><span class="tag">SUBJECT_A</span><span class="kind" id="kind-a">awaiting specimen</span></div>
-          <input id="donor-a" name="a" maxlength="200" placeholder="Spotify · vercel/ms · github.com/…" required>
+      <form id="fuse-form" class="board" autocomplete="off">
+        <div class="terminal a">
+          <div class="plate-head"><span class="screw"></span><span>TERMINAL A</span><span class="kind" id="kind-a">EMPTY</span><span class="screw"></span></div>
+          <label class="field">
+            <span class="sr">Subject A</span>
+            <input id="donor-a" name="a" maxlength="200" placeholder="Spotify" required>
+          </label>
           <div class="chips" data-for="donor-a">
             <button type="button">vercel/ms</button><button type="button">lukeed/dequal</button><button type="button">Spotify</button>
           </div>
         </div>
 
-        <div class="stitch" aria-hidden="true">
-          <span>⚡</span><span class="x">×</span><span>⚡</span>
+        <div class="fuse-wrap" aria-hidden="true">
+          <svg class="fuse" id="fuse" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet">
+            <path class="lead a" d="M0 60H74"/>
+            <path class="lead b" d="M246 60H320"/>
+            <g class="body">
+              <rect x="74" y="34" width="34" height="52" rx="4" class="cap"/>
+              <rect x="212" y="34" width="34" height="52" rx="4" class="cap"/>
+              <path class="ribs" d="M82 34v52M90 34v52M98 34v52M220 34v52M228 34v52M236 34v52"/>
+              <rect x="108" y="42" width="104" height="36" class="glass"/>
+              <path class="filament" d="M108 60h14l6-10 8 20 8-20 8 20 8-20 8 20 8-20 8 20 6-10h14"/>
+              <text x="160" y="104" class="rating">250V · 2 DONORS · T</text>
+            </g>
+          </svg>
+          <button class="switch" id="fuse-btn" type="submit">
+            <span class="switch-label">FUSE</span>
+            <span class="switch-sub">A + B → NEW</span>
+          </button>
         </div>
 
-        <div class="slab" data-label="B">
-          <div class="slab-head"><span class="tag">SUBJECT_B</span><span class="kind" id="kind-b">awaiting specimen</span></div>
-          <input id="donor-b" name="b" maxlength="200" placeholder="Instagram · lukeed/klona · site.com" required>
+        <div class="terminal b">
+          <div class="plate-head"><span class="screw"></span><span>TERMINAL B</span><span class="kind" id="kind-b">EMPTY</span><span class="screw"></span></div>
+          <label class="field">
+            <span class="sr">Subject B</span>
+            <input id="donor-b" name="b" maxlength="200" placeholder="Instagram" required>
+          </label>
           <div class="chips" data-for="donor-b">
             <button type="button">sindresorhus/pretty-bytes</button><button type="button">lukeed/klona</button><button type="button">Instagram</button>
           </div>
         </div>
 
-        <button class="lever" id="fuse-btn" type="submit"><span>PULL THE LEVER</span><small>// fuse --verify</small></button>
         <p class="form-msg" id="form-msg" role="status"></p>
       </form>
 
-      <section class="how">
-        <h2><span class="hash">#</span> the procedure</h2>
+      <section class="spec">
+        <h2 class="section-title"><span>01</span>Procedure</h2>
         <ol class="steps">
-          <li><b>resolve</b> app names → open-source twins</li>
-          <li><b>intake</b> clone + license gate</li>
-          <li><b>dissect</b> REA static analysis → spec cards</li>
-          <li><b>fuse</b> 3 creature concepts, you pick</li>
-          <li><b>contract</b> tests written before birth</li>
-          <li><b>grow</b> fresh code, zero deps</li>
-          <li><b>verify</b> sandboxed tests + repairs</li>
-          <li><b>originality</b> clean-room scan</li>
+          <li><code>RSLV</code><b>Resolve</b><span>App names and sites become open-source twins.</span></li>
+          <li><code>INTK</code><b>Intake</b><span>Shallow clone, license gate.</span></li>
+          <li><code>DSCT</code><b>Dissect</b><span>REA static analysis → spec cards. Behavior, never code.</span></li>
+          <li><code>FUSE</code><b>Fuse</b><span>Three concepts. You choose one.</span></li>
+          <li><code>CTRC</code><b>Contract</b><span>Acceptance tests written before birth.</span></li>
+          <li><code>GROW</code><b>Grow</b><span>Fresh code, zero dependencies.</span></li>
+          <li><code>VRFY</code><b>Verify</b><span>Sandboxed tests, repair rounds.</span></li>
+          <li><code>ORIG</code><b>Originality</b><span>Clean-room scan against both donors.</span></li>
         </ol>
       </section>
 
-      <section class="gallery-wrap">
-        <h2><span class="hash">#</span> specimens that lived</h2>
-        <div class="gallery" id="gallery"><p class="dim">loading specimens…</p></div>
+      <section class="catalog">
+        <h2 class="section-title"><span>02</span>Parts catalog <small>things that held current</small></h2>
+        <div class="parts" id="gallery"><p class="mute">Loading parts…</p></div>
       </section>
     </section>
 
-    <!-- RUN -->
+    <!-- RUN ──────────────────────────────────────────────── -->
     <section id="run" class="view" hidden>
       <div class="run-head">
-        <a href="/" class="back">← new experiment</a>
-        <h1 class="run-title"><span id="run-a">A</span> <span class="x">×</span> <span id="run-b">B</span></h1>
+        <a href="/" class="back">← New fuse</a>
+        <h1 class="run-title"><span class="ta" id="run-a">A</span><span class="times">×</span><span class="tb" id="run-b">B</span></h1>
         <code class="run-id" id="run-id"></code>
       </div>
 
-      <ol class="rail" id="rail">
-        <li data-stage="intake">intake</li>
-        <li data-stage="dissect-a">dissect A</li>
-        <li data-stage="dissect-b">dissect B</li>
-        <li data-stage="fuse">fuse</li>
-        <li data-stage="pick">pick</li>
-        <li data-stage="contract">contract</li>
-        <li data-stage="grow">grow</li>
-        <li data-stage="verify">verify</li>
-        <li data-stage="originality">originality</li>
-        <li data-stage="verdict">verdict</li>
+      <ol class="circuit" id="rail">
+        <li data-stage="intake"><i></i><span>Intake</span></li>
+        <li data-stage="dissect-a"><i></i><span>Dissect A</span></li>
+        <li data-stage="dissect-b"><i></i><span>Dissect B</span></li>
+        <li data-stage="fuse"><i></i><span>Fuse</span></li>
+        <li data-stage="pick"><i></i><span>Pick</span></li>
+        <li data-stage="contract"><i></i><span>Contract</span></li>
+        <li data-stage="grow"><i></i><span>Grow</span></li>
+        <li data-stage="verify"><i></i><span>Verify</span></li>
+        <li data-stage="originality"><i></i><span>Originality</span></li>
+        <li data-stage="verdict"><i></i><span>Verdict</span></li>
       </ol>
 
-      <div class="grid">
-        <div class="term">
-          <div class="term-bar"><i></i><i></i><i></i><span>lab.log: live</span><span class="elapsed" id="elapsed"></span></div>
+      <div class="bench">
+        <div class="tape">
+          <div class="tape-head"><span><i class="rec"></i>LAB TAPE</span><span class="elapsed" id="elapsed">00:00</span></div>
           <pre id="log" aria-live="polite"></pre>
         </div>
-
-        <aside class="side">
-          <div class="donor-cards" id="donor-cards"></div>
-        </aside>
+        <aside class="sheets" id="donor-cards"></aside>
       </div>
 
       <section id="pick" class="pick" hidden>
-        <h2><span class="hash">#</span> choose the creature to grow</h2>
+        <h2 class="section-title"><span>⏚</span>Select one output</h2>
         <div class="concepts" id="concepts"></div>
       </section>
 
       <section id="verdict" class="verdict" hidden>
-        <div class="banner" id="banner"></div>
+        <div class="verdict-top">
+          <div class="stamp" id="banner"></div>
+          <div class="verdict-info" id="verdict-info"></div>
+        </div>
         <div class="stats" id="stats"></div>
-        <div class="tabs">
-          <button type="button" data-tab="report" class="on">REPORT.md</button>
-          <button type="button" data-tab="files">creature/</button>
+        <div class="tabs" role="tablist">
+          <button type="button" data-tab="report" class="on">Report</button>
+          <button type="button" data-tab="files">Files</button>
         </div>
         <div class="tab" id="tab-report"><article class="md" id="report"></article></div>
         <div class="tab" id="tab-files" hidden>
-          <div class="files"><ul id="file-list"></ul><pre id="file-view" class="code">select a file</pre></div>
+          <div class="files"><ul id="file-list"></ul><pre id="file-view" class="code">Select a file.</pre></div>
         </div>
       </section>
     </section>
   </main>
 
   <footer class="foot">
-    <span>ReaFuse is built on <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA: Reverse Engineer Anything</a> · independent, not affiliated</span>
-    <span>learns behavior, never copies code · MIT</span>
+    <span>ReaFuse is an independent project built on <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA: Reverse Engineer Anything</a>. Not affiliated with the REA maintainers.</span>
+    <span>Learns behavior, never copies code · MIT</span>
   </footer>
 
   <script src="/app.js" type="module"></script>
