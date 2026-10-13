@@ -140,7 +140,7 @@ async function claudeCliBackend({ system, prompt, jsonSchema, model, runDir }) {
     "--system-prompt",
     system,
     "--json-schema",
-    JSON.stringify(jsonSchema),
+    JSON.stringify(withoutDialect(jsonSchema)),
   ];
   if (process.env.REAFUSE_CLAUDE_MODEL ?? model) args.push("--model", process.env.REAFUSE_CLAUDE_MODEL ?? model);
 
@@ -174,4 +174,10 @@ export function findClaudeCli() {
     if (dir && existsSync(candidate)) return candidate;
   }
   return null;
+}
+
+/** Drops the "$schema" dialect marker, which some validators (e.g. the Claude CLI's) reject. */
+function withoutDialect(jsonSchema) {
+  const { $schema, ...schema } = jsonSchema;
+  return schema;
 }
