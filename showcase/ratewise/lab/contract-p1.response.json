@@ -1,0 +1,145 @@
+{
+  "tests": [
+    {
+      "path": "test/contract/ratewise.contract.test.mjs",
+      "content": "import test from \"node:test\";\nimport assert from \"node:assert/strict\";\nimport { parseSize, parseRate, formatSize, formatRate, eta, budget } from \"../../src/index.mjs\";\n\nconst close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-6 * Math.max(1, Math.abs(expected)), `${actual} ≉ ${expected}`);\n\ntest(\"parseSize reads decimal units\", () => {\n  assert.equal(parseSize(\"1.5 GB\"), 1_500_000_000);\n  assert.equal(parseSize(\"1 kB\"), 1000);\n});\n\ntest(\"parseSize reads binary units\", () => {\n  assert.equal(parseSize(\"2 KiB\"), 2048);\n  assert.equal(parseSize(\"1 MiB\"), 1_048_576);\n});\n\ntest(\"parseSize converts bits to bytes\", () => {\n  assert.equal(parseSize(\"100 Mbit\"), 12_500_000);\n});\n\ntest(\"parseSize treats a bare number as bytes\", () => {\n  assert.equal(parseSize(\"100\"), 100);\n});\n\ntest(\"parseSize returns NaN for unrecognised text\", () => {\n  assert.ok(Number.isNaN(parseSize(\"banana\")));\n});\n\ntest(\"parseRate reads per-second rates\", () => {\n  assert.equal(parseRate(\"5 MB/s\"), 5_000_000);\n  assert.equal(parseRate(\"100 Mbit/s\"), 12_500_000);\n});\n\ntest(\"parseRate understands duration units like ms does\", () => {\n  close(parseRate(\"20 GB/day\"), 20e9 / 86_400);\n  close(parseRate(\"1 KiB/min\"), 1024 / 60);\n  assert.equal(parseRate(\"3600 kB/h\"), 1000);\n});\n\ntest(\"parseRate returns NaN without a time unit or for nonsense\", () => {\n  assert.ok(Number.isNaN(parseRate(\"5 MB\")));\n  assert.ok(Number.isNaN(parseRate(\"fast\")));\n});\n\ntest(\"formatSize uses 3 significant digits and decimal units\", () => {\n  assert.equal(formatSize(1337), \"1.34 kB\");\n  assert.equal(formatSize(0), \"0 B\");\n  assert.equal(formatSize(999), \"999 B\");\n});\n\ntest(\"formatSize supports binary and bit units\", () => {\n  assert.equal(formatSize(1024, { binary: true }), \"1 KiB\");\n  assert.equal(formatSize(125_000, { bits: true }), \"1 Mbit\");\n});\n\ntest(\"formatRate formats bytes per second\", () => {\n  assert.equal(formatRate(1337), \"1.34 kB/s\");\n  assert.equal(formatRate(12_500_000, { bits: true }), \"100 Mbit/s\");\n});\n\ntest(\"formatRate can express the rate per day\", () => {\n  assert.equal(formatRate(20e9 / 86_400, { per: \"d\" }), \"20 GB/d\");\n});\n\ntest(\"eta gives a short duration for text inputs\", () => {\n  assert.equal(eta(\"3 GB\", \"25 MB/s\"), \"2m\");\n  assert.equal(eta(\"500 MB\", \"100 Mbit/s\"), \"40s\");\n});\n\ntest(\"eta gives a long duration on request\", () => {\n  assert.equal(eta(\"3 GB\", \"25 MB/s\", { long: true }), \"2 minutes\");\n});\n\ntest(\"eta accepts raw numbers (bytes and bytes per second)\", () => {\n  assert.equal(eta(1000, 1), \"17m\");\n  assert.equal(eta(1, 1000), \"1ms\");\n});\n\ntest(\"eta rejects a zero rate\", () => {\n  assert.throws(() => eta(\"1 GB\", 0), RangeError);\n});\n\ntest(\"budget multiplies a rate by a duration\", () => {\n  assert.equal(budget(\"10 MB/s\", \"1h\"), 36_000_000_000);\n  assert.equal(budget(1000, 60_000), 60_000);\n});\n\ntest(\"budget output reads naturally through formatSize\", () => {\n  assert.equal(formatSize(budget(\"100 Mbit/s\", \"1h\")), \"45 GB\");\n});\n"
+    }
+  ],
+  "mapping": [
+    {
+      "test": "parseSize reads decimal units",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "parseSize reads binary units",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "parseSize converts bits to bytes",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "parseSize treats a bare number as bytes",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "parseSize returns NaN for unrecognised text",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "parseRate reads per-second rates",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "parseRate understands duration units like ms does",
+      "origin": "A",
+      "capabilityIds": [
+        "parse-duration",
+        "format-duration-long"
+      ]
+    },
+    {
+      "test": "parseRate returns NaN without a time unit or for nonsense",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "formatSize uses 3 significant digits and decimal units",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "formatSize supports binary and bit units",
+      "origin": "B",
+      "capabilityIds": [
+        "format-bytes",
+        "unit-systems"
+      ]
+    },
+    {
+      "test": "formatRate formats bytes per second",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "formatRate can express the rate per day",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "eta gives a short duration for text inputs",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "eta gives a long duration on request",
+      "origin": "A",
+      "capabilityIds": [
+        "parse-duration",
+        "format-duration-long"
+      ]
+    },
+    {
+      "test": "eta accepts raw numbers (bytes and bytes per second)",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "eta rejects a zero rate",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "budget multiplies a rate by a duration",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    },
+    {
+      "test": "budget output reads naturally through formatSize",
+      "origin": "fusion",
+      "capabilityIds": [
+        "rates"
+      ]
+    }
+  ]
+}

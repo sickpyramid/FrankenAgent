@@ -1,0 +1,13 @@
+{
+  "name": "ratewise",
+  "version": "0.1.0",
+  "description": "Human-readable transfer rates, ETAs and data budgets.",
+  "type": "module",
+  "main": "src/index.mjs",
+  "exports": "./src/index.mjs",
+  "bin": { "ratewise": "bin/ratewise.mjs" },
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=22" },
+  "keywords": ["bytes", "rate", "throughput", "eta", "bandwidth", "duration"],
+  "license": "MIT"
+}

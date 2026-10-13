@@ -1,0 +1,57 @@
+{
+  "proposals": [
+    {
+      "name": "ratewise",
+      "tagline": "Human-readable transfer rates, ETAs and data budgets: '3 GB at 25 MB/s' → '2m'.",
+      "concept": "A tiny library and CLI for anyone who moves data: parse sizes ('1.5 GB') and rates ('100 Mbit/s', '20 GB/day'), format rates back for humans, estimate how long a transfer takes, and compute how much data fits in a time window. Useful for download managers, backup scripts, CI logs and capacity planning.",
+      "inheritsFromA": ["parse-duration", "format-duration-short", "format-duration-long"],
+      "inheritsFromB": ["format-bytes", "unit-systems"],
+      "newCapability": "Rates: sizes divided by durations. Neither donor can parse '20 GB/day', convert it to bytes per second, or answer 'how long will 3 GB take at 25 MB/s?'.",
+      "whyItIsNew": "ms knows time but not data; pretty-bytes knows data but not time and cannot parse. Fused, they describe throughput: a separate domain neither covers.",
+      "api": [
+        { "name": "parseSize", "signature": "parseSize(text: string): number", "description": "Parses '1.5 GB', '2 KiB', '100 Mbit' or a bare number of bytes into bytes. Bits are divided by 8. Returns NaN for unrecognised text." },
+        { "name": "parseRate", "signature": "parseRate(text: string): number", "description": "Parses '<size>/<duration unit>' such as '5 MB/s', '20 GB/day', '100 Mbit/s' into bytes per second. Returns NaN for unrecognised text." },
+        { "name": "formatSize", "signature": "formatSize(bytes: number, options?: { binary?: boolean, bits?: boolean }): string", "description": "Formats bytes with 3 significant digits, e.g. 1337 → '1.34 kB'." },
+        { "name": "formatRate", "signature": "formatRate(bytesPerSecond: number, options?: { per?: 's'|'m'|'h'|'d', binary?: boolean, bits?: boolean }): string", "description": "Formats a rate, e.g. 1337 → '1.34 kB/s'; with bits, 12500000 → '100 Mbit/s'." },
+        { "name": "eta", "signature": "eta(size: number|string, rate: number|string, options?: { long?: boolean }): string", "description": "How long a transfer takes, as a short ('2m') or long ('2 minutes') duration." },
+        { "name": "budget", "signature": "budget(rate: number|string, duration: number|string): number", "description": "Bytes transferred at a rate over a duration (milliseconds or text like '1h')." }
+      ],
+      "cliCommand": "ratewise",
+      "cliExamples": [
+        "ratewise eta \"3 GB\" \"25 MB/s\"",
+        "ratewise rate \"20 GB/day\" --per s",
+        "ratewise budget \"100 Mbit/s\" 1h"
+      ]
+    },
+    {
+      "name": "staleness",
+      "tagline": "Cache size and age policies in one readable string: 'max 500 MB, evict after 7d'.",
+      "concept": "A policy parser and checker for caches: express limits as human strings and ask whether an entry or a cache directory violates them, with readable explanations.",
+      "inheritsFromA": ["parse-duration", "format-duration-long"],
+      "inheritsFromB": ["format-bytes"],
+      "newCapability": "Combined size-and-age policies with human-readable violation messages.",
+      "whyItIsNew": "Neither donor models limits or policies; together they express both dimensions of cache eviction.",
+      "api": [
+        { "name": "parsePolicy", "signature": "parsePolicy(text: string): { maxBytes: number, maxAgeMs: number }", "description": "Parses a policy string." },
+        { "name": "check", "signature": "check(policy, entry: { bytes: number, ageMs: number }): { ok: boolean, reasons: string[] }", "description": "Checks an entry against a policy." }
+      ],
+      "cliCommand": "staleness",
+      "cliExamples": ["staleness check \"max 500 MB, evict after 7d\" --bytes 600000000 --age 3d"]
+    },
+    {
+      "name": "quotaclock",
+      "tagline": "Readable usage quotas: '10 GB per 30d' with remaining-allowance messages.",
+      "concept": "Model data quotas over time windows (mobile plans, API egress limits) and report usage and remaining allowance for humans.",
+      "inheritsFromA": ["parse-duration", "format-duration-short"],
+      "inheritsFromB": ["format-bytes", "unit-systems"],
+      "newCapability": "Quota windows that combine a data allowance with a time period.",
+      "whyItIsNew": "Quotas need both a size and a period, which neither donor expresses alone.",
+      "api": [
+        { "name": "parseQuota", "signature": "parseQuota(text: string): { bytes: number, windowMs: number }", "description": "Parses '10 GB per 30d'." },
+        { "name": "remaining", "signature": "remaining(quota, usedBytes: number): string", "description": "Readable remaining allowance." }
+      ],
+      "cliCommand": "quotaclock",
+      "cliExamples": ["quotaclock remaining \"10 GB per 30d\" --used 7.5GB"]
+    }
+  ]
+}

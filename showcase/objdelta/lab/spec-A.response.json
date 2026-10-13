@@ -1,0 +1,38 @@
+{
+  "name": "dequal",
+  "oneLiner": "Answers whether two JavaScript values are deeply equal.",
+  "problem": "=== compares references; developers need to know whether two structures hold the same data.",
+  "capabilities": [
+    {
+      "id": "deep-equal",
+      "name": "Deep structural equality",
+      "behavior": "Returns true when two values have the same structure and contents: plain objects compare own keys and values recursively (key order ignored), arrays compare length and items in order, and values must share the same constructor. An array never equals a plain object.",
+      "inputs": "Any two values.",
+      "outputs": "true or false.",
+      "edgeCases": ["NaN equals NaN.", "An extra key on either side makes the values unequal.", "Different constructors are unequal even with identical keys."],
+      "examples": [
+        { "input": "dequal({a:[1,{b:2}]}, {a:[1,{b:2}]})", "output": "true" },
+        { "input": "dequal({a:1}, {a:1,b:2})", "output": "false" },
+        { "input": "dequal([], {})", "output": "false" },
+        { "input": "dequal(NaN, NaN)", "output": "true" }
+      ]
+    },
+    {
+      "id": "special-objects",
+      "name": "Equality for built-in object types",
+      "behavior": "Dates are equal when they hold the same time; regular expressions when source and flags match; Maps and Sets when they have the same size and matching entries (Set order ignored, object keys found by deep equality); typed arrays, ArrayBuffers and DataViews when their bytes match.",
+      "inputs": "Dates, RegExps, Maps, Sets, binary views.",
+      "outputs": "true or false.",
+      "edgeCases": ["/x/g and /x/i are different."],
+      "examples": [
+        { "input": "dequal(new Date(0), new Date(0))", "output": "true" },
+        { "input": "dequal(/x/g, /x/i)", "output": "false" },
+        { "input": "dequal(new Set([1,2]), new Set([2,1]))", "output": "true" },
+        { "input": "dequal(new Map([['k',{v:1}]]), new Map([['k',{v:1}]]))", "output": "true" }
+      ]
+    }
+  ],
+  "designIdeas": ["A single predicate with no options.", "Constructor identity is part of equality.", "A 'lite' variant trades built-in type support for size."],
+  "limitations": ["Answers only yes or no; it cannot say what differs.", "No cycle detection."],
+  "evidence": ["src/index.js", "src/lite.js", "test/index.js", "readme.md"]
+}

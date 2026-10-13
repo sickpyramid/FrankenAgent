@@ -1,0 +1,468 @@
+{
+  "command": "rea analyze-javascript-application <donor> --json",
+  "evidenceId": "ev_db4c45dbf8f2d8f601f2d7fe1b89b84e5f8a7bb7516ef9ae9bec405d97baf788",
+  "analyzer": "REA JavaScript application analyzer",
+  "statistics": {
+    "relevant_files": 39,
+    "nested_asar_containers": 0,
+    "text_bytes_read": 46651,
+    "invalid_utf8_files": 0,
+    "parsed_javascript_files": 37,
+    "visited_ast_nodes": 8318,
+    "findings": 195,
+    "modules": 0,
+    "parse_failures": 0
+  },
+  "modules": [
+    {
+      "path": "bench/validate/json.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu/assert"
+      ]
+    },
+    {
+      "path": "test/suites/array.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    },
+    {
+      "path": "test/suites/date.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "bench/index.js",
+      "format": "commonjs",
+      "exports": [],
+      "internalImports": [],
+      "externalImports": [
+        "rfdc",
+        "lodash/clonedeep",
+        "klona/lite",
+        "benchmark",
+        "path",
+        "clone-deep",
+        "deep-copy",
+        "klona",
+        "clone",
+        "klona/json",
+        "klona/full"
+      ]
+    },
+    {
+      "path": "test/suites/pollution.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    },
+    {
+      "path": "bench/validate/default.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert"
+      ]
+    },
+    {
+      "path": "test/suites/symbol.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    },
+    {
+      "path": "test/suites/string.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/full.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "test/suites/index.js",
+        "src/full.js"
+      ],
+      "externalImports": []
+    },
+    {
+      "path": "bench/fixtures/default.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "bench/fixtures/json.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/map.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "bench/validate/full.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert"
+      ]
+    },
+    {
+      "path": "test/suites/number.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/lite.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "test/suites/index.js",
+        "src/lite.js"
+      ],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/object.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    },
+    {
+      "path": "test/suites/index.js",
+      "format": "esm",
+      "exports": [
+        "API",
+        "Arrays",
+        "Booleans",
+        "Classes",
+        "Dates",
+        "Descriptors",
+        "Dicts",
+        "Functions",
+        "Maps",
+        "Nully",
+        "Numbers",
+        "Objects",
+        "Pollutions",
+        "RegExps",
+        "Sets",
+        "Strings",
+        "Symbols",
+        "TypedArrays"
+      ],
+      "internalImports": [
+        "test/suites/map.js",
+        "test/suites/nullish.js",
+        "test/suites/array.js",
+        "test/suites/api.js",
+        "test/suites/function.js",
+        "test/suites/object.js",
+        "test/suites/descriptor.js",
+        "test/suites/string.js",
+        "test/suites/number.js",
+        "test/suites/boolean.js",
+        "test/suites/set.js",
+        "test/suites/pollution.js",
+        "test/suites/class.js",
+        "test/suites/dictionary.js",
+        "test/suites/date.js",
+        "test/suites/regexp.js",
+        "test/suites/symbol.js",
+        "test/suites/typedarray.js"
+      ],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/function.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "src/full.js",
+      "format": "esm",
+      "exports": [
+        "klona"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/class.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/suites/dictionary.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/suites/regexp.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    },
+    {
+      "path": "index.d.ts",
+      "format": "unknown",
+      "exports": [],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/json.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "test/suites/index.js",
+        "src/json.js"
+      ],
+      "externalImports": []
+    },
+    {
+      "path": "bench/fixtures/lite.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/set.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "src/json.js",
+      "format": "esm",
+      "exports": [
+        "klona"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "bench/validate/lite.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu/assert"
+      ]
+    },
+    {
+      "path": "src/index.js",
+      "format": "esm",
+      "exports": [
+        "klona"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "bench/fixtures/full.js",
+      "format": "commonjs",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "src/lite.js",
+      "format": "esm",
+      "exports": [
+        "klona"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/typedarray.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/suites/api.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu/assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/index.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "test/suites/index.js",
+        "src/index.js"
+      ],
+      "externalImports": []
+    },
+    {
+      "path": "test/suites/boolean.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "test/suites/nullish.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    },
+    {
+      "path": "test/suites/descriptor.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": [
+        "uvu",
+        "assert"
+      ]
+    }
+  ],
+  "limitations": [
+    "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+    "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+    "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+    "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+    "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+  ]
+}

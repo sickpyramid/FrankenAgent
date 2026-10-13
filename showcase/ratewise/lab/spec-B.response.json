@@ -1,0 +1,69 @@
+{
+  "name": "pretty-bytes",
+  "oneLiner": "Turns a byte count into a short human-readable size string such as '1.34 kB'.",
+  "problem": "Raw byte counts like 1337 or 1073741824 are hard to read; people want '1.34 kB' or '1 GiB'.",
+  "capabilities": [
+    {
+      "id": "format-bytes",
+      "name": "Format a byte count",
+      "behavior": "Chooses the largest decimal unit (B, kB, MB, GB, TB, PB, EB, ZB, YB; base 1000) that keeps the value at or above 1, and rounds to 3 significant digits (more when the integer part already has more digits), dropping trailing zeros. A space separates number and unit.",
+      "inputs": "A finite number (or bigint) of bytes.",
+      "outputs": "A string like '1.34 kB'.",
+      "edgeCases": [
+        "Values under 1 kB stay in bytes: 999 is '999 B'.",
+        "Rounding can promote the unit: 999999 bytes is '1 MB'.",
+        "Zero is '0 B'; -0 is treated as 0.",
+        "Negative values keep a leading '-'.",
+        "Non-finite numbers are a TypeError."
+      ],
+      "examples": [
+        { "input": "prettyBytes(0)", "output": "'0 B'" },
+        { "input": "prettyBytes(100)", "output": "'100 B'" },
+        { "input": "prettyBytes(999)", "output": "'999 B'" },
+        { "input": "prettyBytes(1000)", "output": "'1 kB'" },
+        { "input": "prettyBytes(1337)", "output": "'1.34 kB'" },
+        { "input": "prettyBytes(999999)", "output": "'1 MB'" },
+        { "input": "prettyBytes(1e16)", "output": "'10 PB'" },
+        { "input": "prettyBytes(-27)", "output": "'-27 B'" }
+      ]
+    },
+    {
+      "id": "unit-systems",
+      "name": "Binary and bit unit systems",
+      "behavior": "Option 'binary' switches to base-1024 IEC units (B, KiB, MiB, GiB, ...). Option 'bits' formats the value as bits with units b, kbit, Mbit, Gbit, ... Both can be combined (kibit, Mibit, ...).",
+      "inputs": "A number plus { binary?: boolean, bits?: boolean }.",
+      "outputs": "A string in the chosen unit system.",
+      "edgeCases": ["The input is not multiplied by 8 in bits mode; it is already a bit count."],
+      "examples": [
+        { "input": "prettyBytes(1024, {binary: true})", "output": "'1 KiB'" },
+        { "input": "prettyBytes(1536, {binary: true})", "output": "'1.5 KiB'" },
+        { "input": "prettyBytes(1337, {bits: true})", "output": "'1.34 kbit'" },
+        { "input": "prettyBytes(1000000, {bits: true})", "output": "'1 Mbit'" }
+      ]
+    },
+    {
+      "id": "presentation-options",
+      "name": "Presentation options",
+      "behavior": "Option 'signed' prefixes '+' for positive values and a space for exactly zero (useful for diffs). Option 'space: false' removes the separator. Option 'fixedWidth' left-pads the result with spaces to a minimum length. Fraction digit options truncate (not round) to the requested number of decimals.",
+      "inputs": "A number plus presentation options.",
+      "outputs": "A formatted string.",
+      "edgeCases": ["fixedWidth must be a non-negative integer, otherwise TypeError."],
+      "examples": [
+        { "input": "prettyBytes(42, {signed: true})", "output": "'+42 B'" },
+        { "input": "prettyBytes(0, {signed: true})", "output": "' 0 B'" },
+        { "input": "prettyBytes(1337, {space: false})", "output": "'1.34kB'" },
+        { "input": "prettyBytes(1337, {fixedWidth: 10})", "output": "'   1.34 kB'" }
+      ]
+    }
+  ],
+  "designIdeas": [
+    "Three significant digits is the readable default.",
+    "Explicit unit systems (SI bytes, IEC bytes, bits) selected by flags rather than separate functions.",
+    "Signed output for showing size differences."
+  ],
+  "limitations": [
+    "Format only: it cannot parse '1.34 kB' back into bytes.",
+    "No notion of time, so it cannot describe transfer rates."
+  ],
+  "evidence": ["index.js", "test.js", "readme.md", "ev_8775ace1db4550f"]
+}

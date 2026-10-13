@@ -1,0 +1,295 @@
+{
+  "schema": "frankenagent.lab-report/v1",
+  "runId": "202610131250-dequal-x-klona-5fb6",
+  "createdAt": "2026-10-13T12:50:32.341Z",
+  "frankenagent": "0.1.0",
+  "rea": "6.4.0",
+  "brain": {
+    "provider": "handoff",
+    "model": "claude-opus-5-5"
+  },
+  "donors": {
+    "A": {
+      "input": "lukeed/dequal",
+      "name": "dequal",
+      "url": "https://github.com/lukeed/dequal.git",
+      "commit": "37c21f675c1f538f2d4b63ebf19a161411e7a5fd",
+      "license": "MIT",
+      "gate": {
+        "ok": true,
+        "reason": "MIT is permissive."
+      },
+      "capabilities": [
+        "deep-equal",
+        "special-objects"
+      ]
+    },
+    "B": {
+      "input": "lukeed/klona",
+      "name": "klona",
+      "url": "https://github.com/lukeed/klona.git",
+      "commit": "e563341d88f433e74a9b4c3c0372d4ba55d2f79e",
+      "license": "MIT",
+      "gate": {
+        "ok": true,
+        "reason": "MIT is permissive."
+      },
+      "capabilities": [
+        "deep-clone",
+        "clone-builtins"
+      ]
+    }
+  },
+  "proposals": [
+    {
+      "name": "objdelta",
+      "tagline": "Structural diffs and immutable patches for plain JavaScript data."
+    },
+    {
+      "name": "snapshot-guard",
+      "tagline": "Detect when code mutated data it should not have."
+    },
+    {
+      "name": "dedupe-deep",
+      "tagline": "Remove structurally duplicate items from collections."
+    }
+  ],
+  "creature": {
+    "name": "objdelta",
+    "tagline": "Structural diffs and immutable patches for plain JavaScript data.",
+    "concept": "Compute exactly what changed between two values as a list of path-addressed operations, replay those operations on a value without mutating it, and print them for humans. Useful for undo/redo, audit logs, syncing state and readable test failures.",
+    "newCapability": "diff/patch: equality tells where values differ, cloning makes the patched result independent. Round-trip guarantee: patch(a, diff(a, b)) equals b, and a is untouched.",
+    "inheritsFromA": [
+      "deep-equal",
+      "special-objects"
+    ],
+    "inheritsFromB": [
+      "deep-clone",
+      "clone-builtins"
+    ],
+    "api": [
+      {
+        "name": "equal",
+        "signature": "equal(a: unknown, b: unknown): boolean",
+        "description": "Deep equality for objects, arrays, Date, RegExp, Map, Set and NaN."
+      },
+      {
+        "name": "clone",
+        "signature": "clone<T>(value: T): T",
+        "description": "Deep, independent copy including Date, RegExp, Map and Set."
+      },
+      {
+        "name": "diff",
+        "signature": "diff(before: unknown, after: unknown): Array<{ op: 'add'|'remove'|'replace', path: Array<string|number>, value?: unknown }>",
+        "description": "Operations that turn before into after. Object keys follow before's order, then new keys; extra array items are added in order or removed from the end."
+      },
+      {
+        "name": "patch",
+        "signature": "patch<T>(value: T, ops: Op[]): T",
+        "description": "Applies operations to a deep clone of value. Never mutates its inputs; inserted values are cloned."
+      },
+      {
+        "name": "summarize",
+        "signature": "summarize(ops: Op[]): string[]",
+        "description": "Human-readable lines: '~ user.name', '+ tags[2]', '- legacy'."
+      }
+    ],
+    "cli": {
+      "command": "objdelta",
+      "examples": [
+        "objdelta before.json after.json",
+        "objdelta before.json after.json --json"
+      ]
+    },
+    "dir": "creature/objdelta"
+  },
+  "contract": {
+    "tests": [
+      {
+        "test": "equal compares nested objects and arrays",
+        "origin": "A",
+        "capabilityIds": [
+          "deep-equal",
+          "special-objects"
+        ]
+      },
+      {
+        "test": "equal handles Date, RegExp and NaN",
+        "origin": "A",
+        "capabilityIds": [
+          "deep-equal",
+          "special-objects"
+        ]
+      },
+      {
+        "test": "equal handles Map and Set",
+        "origin": "A",
+        "capabilityIds": [
+          "deep-equal",
+          "special-objects"
+        ]
+      },
+      {
+        "test": "clone makes an independent deep copy",
+        "origin": "B",
+        "capabilityIds": [
+          "deep-clone",
+          "clone-builtins"
+        ]
+      },
+      {
+        "test": "clone preserves Date, RegExp, Map and Set",
+        "origin": "B",
+        "capabilityIds": [
+          "deep-clone",
+          "clone-builtins"
+        ]
+      },
+      {
+        "test": "clone returns primitives unchanged",
+        "origin": "B",
+        "capabilityIds": [
+          "deep-clone",
+          "clone-builtins"
+        ]
+      },
+      {
+        "test": "diff of equal values is empty",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "diff reports replace, add and remove with paths",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "diff descends into nested objects",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "diff handles growing and shrinking arrays",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "diff replaces values whose type changes, including at the root",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "diff compares Dates by value",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "patch applies operations without mutating its input",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "patch(a, diff(a, b)) reproduces b",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "patch clones inserted values",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "patch rejects a path through a missing parent",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      },
+      {
+        "test": "summarize prints readable change lines",
+        "origin": "fusion",
+        "capabilityIds": [
+          "diff",
+          "patch"
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "sandbox": "node --permission (read-only creature folder, no child processes, no writes)",
+    "contract": {
+      "total": 17,
+      "passed": 17,
+      "failed": 0,
+      "failures": []
+    },
+    "own": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "failures": []
+    },
+    "attempts": [
+      {
+        "attempt": 0,
+        "status": "ALIVE",
+        "contract": {
+          "total": 17,
+          "passed": 17,
+          "failed": 0,
+          "timedOut": false
+        },
+        "own": {
+          "total": 6,
+          "passed": 6,
+          "failed": 0,
+          "timedOut": false
+        }
+      }
+    ]
+  },
+  "originality": {
+    "passed": true,
+    "overlap": 0,
+    "longestCopiedTokens": 0,
+    "thresholds": {
+      "shingleTokens": 20,
+      "maxCopiedRun": 60,
+      "maxOverlap": 0.15
+    },
+    "offenders": []
+  },
+  "verdict": {
+    "status": "ALIVE",
+    "reason": null
+  },
+  "certificate": "53fbf8e8b3df12aa8862166a37e529e06821a0c848e045816d5fc3f7c9ac2f38"
+}

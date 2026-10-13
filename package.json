@@ -1,0 +1,46 @@
+{
+  "name": "frankenagent",
+  "version": "0.1.0",
+  "description": "Dissect two software projects with REA, fuse their capabilities, and grow a brand-new verified creature.",
+  "type": "module",
+  "bin": {
+    "franken": "bin/franken.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "rea:doctor": "rea doctor --json"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "rea-agents": "6.4.0",
+    "zod": "4.6.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sickpyramid/FrankenAgent.git"
+  },
+  "homepage": "https://github.com/sickpyramid/FrankenAgent#readme",
+  "bugs": {
+    "url": "https://github.com/sickpyramid/FrankenAgent/issues"
+  },
+  "keywords": [
+    "reverse-engineering",
+    "rea",
+    "agents",
+    "code-generation",
+    "clean-room",
+    "fusion",
+    "cli"
+  ]
+}

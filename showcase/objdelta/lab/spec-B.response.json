@@ -1,0 +1,35 @@
+{
+  "name": "klona",
+  "oneLiner": "Deep-clones JavaScript values, including built-in object types.",
+  "problem": "Developers need independent copies of nested data so changes to the copy never affect the original.",
+  "capabilities": [
+    {
+      "id": "deep-clone",
+      "name": "Deep clone of objects and arrays",
+      "behavior": "Returns a new value with the same contents where every nested object and array is a fresh copy; primitives are returned as-is. Class instances keep their prototype.",
+      "inputs": "Any value.",
+      "outputs": "An independent deep copy.",
+      "edgeCases": ["A '__proto__' own key is copied as data, never used to change the prototype.", "null and primitives come back unchanged."],
+      "examples": [
+        { "input": "c = klona({a:{b:[1,2]}}); c.a === original.a", "output": "false" },
+        { "input": "klona(5)", "output": "5" },
+        { "input": "klona(null)", "output": "null" }
+      ]
+    },
+    {
+      "id": "clone-builtins",
+      "name": "Clone built-in object types",
+      "behavior": "Dates become new Dates with the same time, regular expressions keep source, flags and lastIndex, Maps and Sets get cloned keys and values, ArrayBuffers, DataViews and typed arrays get copies of their bytes.",
+      "inputs": "Dates, RegExps, Maps, Sets, binary data.",
+      "outputs": "Copies of the same type.",
+      "edgeCases": ["Map values that are objects are cloned, not shared."],
+      "examples": [
+        { "input": "klona(new Date(5)).getTime()", "output": "5" },
+        { "input": "klona(/a/gi).flags", "output": "'gi'" }
+      ]
+    }
+  ],
+  "designIdeas": ["Tiered builds (json, lite, default, full) trading type coverage for size.", "Prototype-pollution-safe copying of '__proto__' keys."],
+  "limitations": ["Copies everything; no structural sharing.", "No cycle detection in the default build."],
+  "evidence": ["src/index.js", "src/lite.js", "src/full.js", "readme.md"]
+}

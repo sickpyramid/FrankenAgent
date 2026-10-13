@@ -1,0 +1,72 @@
+{
+  "name": "ms",
+  "oneLiner": "Converts human-readable duration strings to milliseconds and milliseconds back to short or long human-readable durations.",
+  "problem": "Developers want to write and display time spans like '2 days' or '1h' instead of raw millisecond numbers.",
+  "capabilities": [
+    {
+      "id": "parse-duration",
+      "name": "Parse duration text",
+      "behavior": "Reads a number optionally followed by a time unit and returns the duration in milliseconds. Units are case-insensitive, may be separated from the number by spaces, and accept short, abbreviated and long forms for milliseconds, seconds, minutes, hours, days, weeks, months and years. A bare number is treated as milliseconds. Decimals and negative values are accepted. A year is 365.25 days and a month is one twelfth of a year.",
+      "inputs": "A non-empty string up to 100 characters.",
+      "outputs": "A number of milliseconds, or NaN when the text is not a recognised duration.",
+      "edgeCases": [
+        "Unrecognised text such as '☃' or '10-.5' yields NaN rather than an error.",
+        "An empty string or a string longer than 100 characters is an error.",
+        "Leading-dot decimals such as '.5ms' are accepted."
+      ],
+      "examples": [
+        { "input": "parse('100')", "output": "100" },
+        { "input": "parse('1m')", "output": "60000" },
+        { "input": "parse('1h')", "output": "3600000" },
+        { "input": "parse('2d')", "output": "172800000" },
+        { "input": "parse('3w')", "output": "1814400000" },
+        { "input": "parse('1.5h')", "output": "5400000" },
+        { "input": "parse('1   s')", "output": "1000" },
+        { "input": "parse('-.5h')", "output": "-1800000" },
+        { "input": "parse('53 YeArS')", "output": "1672552800000" },
+        { "input": "parse('☃')", "output": "NaN" }
+      ]
+    },
+    {
+      "id": "format-duration-short",
+      "name": "Format duration (short)",
+      "behavior": "Turns milliseconds into a compact string using the largest unit (y, mo, w, d, h, m, s) whose size the absolute value reaches, rounding to a whole number of that unit. Values below one second are shown as '<n>ms'. Negative values keep their sign.",
+      "inputs": "A finite number of milliseconds.",
+      "outputs": "A short string such as '1s', '10m', '-3h'.",
+      "edgeCases": ["Non-finite numbers (NaN, Infinity) are an error."],
+      "examples": [
+        { "input": "format(500)", "output": "'500ms'" },
+        { "input": "format(1000)", "output": "'1s'" },
+        { "input": "format(60000)", "output": "'1m'" },
+        { "input": "format(3600000)", "output": "'1h'" },
+        { "input": "format(86400000)", "output": "'1d'" },
+        { "input": "format(-234234234)", "output": "'-3d'" }
+      ]
+    },
+    {
+      "id": "format-duration-long",
+      "name": "Format duration (long)",
+      "behavior": "Same unit selection as the short format but spells the unit out ('second', 'minute', ...). The unit is pluralised when the absolute value is at least 1.5 of that unit. Values below one second are shown as '<n> ms'.",
+      "inputs": "A finite number of milliseconds and a long-format option.",
+      "outputs": "A string such as '1 second' or '10 minutes'.",
+      "edgeCases": ["1.4 hours rounds to '1 hour'; 1.5 hours or more becomes '2 hours'."],
+      "examples": [
+        { "input": "format(500, {long:true})", "output": "'500 ms'" },
+        { "input": "format(1000, {long:true})", "output": "'1 second'" },
+        { "input": "format(1200, {long:true})", "output": "'1 second'" },
+        { "input": "format(10000, {long:true})", "output": "'10 seconds'" },
+        { "input": "format(3600000*2, {long:true})", "output": "'2 hours'" }
+      ]
+    }
+  ],
+  "designIdeas": [
+    "One function that both parses (string in) and formats (number out).",
+    "Forgiving parsing: many unit spellings, any letter case, optional whitespace.",
+    "Invalid durations return NaN instead of throwing; only wrong input types throw."
+  ],
+  "limitations": [
+    "Only one number-unit pair per string; '1h 30m' is not supported.",
+    "Months and years are averages, not calendar-aware."
+  ],
+  "evidence": ["src/index.ts", "src/parse.test.ts", "src/format.test.ts", "README.md", "ev_1bb7dd1cd16550ceb9b85f5da97011cc8039958484a050339dc55a8fe357feb5"]
+}

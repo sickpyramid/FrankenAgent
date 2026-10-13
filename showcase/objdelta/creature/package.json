@@ -1,0 +1,13 @@
+{
+  "name": "objdelta",
+  "version": "0.1.0",
+  "description": "Structural diffs and immutable patches for plain JavaScript data.",
+  "type": "module",
+  "main": "src/index.mjs",
+  "exports": "./src/index.mjs",
+  "bin": { "objdelta": "bin/objdelta.mjs" },
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=22" },
+  "keywords": ["diff", "patch", "deep-equal", "clone", "immutable", "json"],
+  "license": "MIT"
+}

@@ -1,0 +1,75 @@
+{
+  "command": "rea analyze-javascript-application <donor> --json",
+  "evidenceId": "ev_8775ace1db4550f3f1ae000c4d648c3f58e507a8a51e4e268f2356243fa3c58a",
+  "analyzer": "REA JavaScript application analyzer",
+  "statistics": {
+    "relevant_files": 5,
+    "nested_asar_containers": 0,
+    "text_bytes_read": 68894,
+    "invalid_utf8_files": 0,
+    "parsed_javascript_files": 4,
+    "visited_ast_nodes": 9338,
+    "findings": 18,
+    "modules": 0,
+    "parse_failures": 0
+  },
+  "modules": [
+    {
+      "path": "index.test-d.ts",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "index.js",
+        "tsd"
+      ],
+      "externalImports": [
+        "tsd"
+      ]
+    },
+    {
+      "path": "index.d.ts",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "index.js",
+        "ava",
+        "node:process",
+        "node:child_process",
+        "node:util",
+        "node:fs"
+      ],
+      "externalImports": [
+        "ava",
+        "node:child_process",
+        "node:process",
+        "node:util",
+        "node:fs"
+      ]
+    },
+    {
+      "path": "index.js",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    }
+  ],
+  "limitations": [
+    "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+    "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+    "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+    "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+    "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+  ]
+}

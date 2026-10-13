@@ -1,0 +1,303 @@
+{
+  "schema": "frankenagent.lab-report/v1",
+  "runId": "202610131244-ms-x-pretty-bytes-b462",
+  "createdAt": "2026-10-13T12:44:15.564Z",
+  "frankenagent": "0.1.0",
+  "rea": "6.4.0",
+  "brain": {
+    "provider": "handoff",
+    "model": "claude-opus-5-5"
+  },
+  "donors": {
+    "A": {
+      "input": "https://github.com/vercel/ms",
+      "name": "ms",
+      "url": "https://github.com/vercel/ms.git",
+      "commit": "4ff48cec099f0514c3e9bbca18706c9c21122bfb",
+      "license": "MIT",
+      "gate": {
+        "ok": true,
+        "reason": "MIT is permissive."
+      },
+      "capabilities": [
+        "parse-duration",
+        "format-duration-short",
+        "format-duration-long"
+      ]
+    },
+    "B": {
+      "input": "https://github.com/sindresorhus/pretty-bytes",
+      "name": "pretty-bytes",
+      "url": "https://github.com/sindresorhus/pretty-bytes.git",
+      "commit": "a35ed21bb4169c0bf40942ffa2987a06b8cd2854",
+      "license": "MIT",
+      "gate": {
+        "ok": true,
+        "reason": "MIT is permissive."
+      },
+      "capabilities": [
+        "format-bytes",
+        "unit-systems",
+        "presentation-options"
+      ]
+    }
+  },
+  "proposals": [
+    {
+      "name": "ratewise",
+      "tagline": "Human-readable transfer rates, ETAs and data budgets: '3 GB at 25 MB/s' → '2m'."
+    },
+    {
+      "name": "staleness",
+      "tagline": "Cache size and age policies in one readable string: 'max 500 MB, evict after 7d'."
+    },
+    {
+      "name": "quotaclock",
+      "tagline": "Readable usage quotas: '10 GB per 30d' with remaining-allowance messages."
+    }
+  ],
+  "creature": {
+    "name": "ratewise",
+    "tagline": "Human-readable transfer rates, ETAs and data budgets: '3 GB at 25 MB/s' → '2m'.",
+    "concept": "A tiny library and CLI for anyone who moves data: parse sizes ('1.5 GB') and rates ('100 Mbit/s', '20 GB/day'), format rates back for humans, estimate how long a transfer takes, and compute how much data fits in a time window. Useful for download managers, backup scripts, CI logs and capacity planning.",
+    "newCapability": "Rates: sizes divided by durations. Neither donor can parse '20 GB/day', convert it to bytes per second, or answer 'how long will 3 GB take at 25 MB/s?'.",
+    "inheritsFromA": [
+      "parse-duration",
+      "format-duration-short",
+      "format-duration-long"
+    ],
+    "inheritsFromB": [
+      "format-bytes",
+      "unit-systems"
+    ],
+    "api": [
+      {
+        "name": "parseSize",
+        "signature": "parseSize(text: string): number",
+        "description": "Parses '1.5 GB', '2 KiB', '100 Mbit' or a bare number of bytes into bytes. Bits are divided by 8. Returns NaN for unrecognised text."
+      },
+      {
+        "name": "parseRate",
+        "signature": "parseRate(text: string): number",
+        "description": "Parses '<size>/<duration unit>' such as '5 MB/s', '20 GB/day', '100 Mbit/s' into bytes per second. Returns NaN for unrecognised text."
+      },
+      {
+        "name": "formatSize",
+        "signature": "formatSize(bytes: number, options?: { binary?: boolean, bits?: boolean }): string",
+        "description": "Formats bytes with 3 significant digits, e.g. 1337 → '1.34 kB'."
+      },
+      {
+        "name": "formatRate",
+        "signature": "formatRate(bytesPerSecond: number, options?: { per?: 's'|'m'|'h'|'d', binary?: boolean, bits?: boolean }): string",
+        "description": "Formats a rate, e.g. 1337 → '1.34 kB/s'; with bits, 12500000 → '100 Mbit/s'."
+      },
+      {
+        "name": "eta",
+        "signature": "eta(size: number|string, rate: number|string, options?: { long?: boolean }): string",
+        "description": "How long a transfer takes, as a short ('2m') or long ('2 minutes') duration."
+      },
+      {
+        "name": "budget",
+        "signature": "budget(rate: number|string, duration: number|string): number",
+        "description": "Bytes transferred at a rate over a duration (milliseconds or text like '1h')."
+      }
+    ],
+    "cli": {
+      "command": "ratewise",
+      "examples": [
+        "ratewise eta \"3 GB\" \"25 MB/s\"",
+        "ratewise rate \"20 GB/day\" --per s",
+        "ratewise budget \"100 Mbit/s\" 1h"
+      ]
+    },
+    "dir": "creature/ratewise"
+  },
+  "contract": {
+    "tests": [
+      {
+        "test": "parseSize reads decimal units",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "parseSize reads binary units",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "parseSize converts bits to bytes",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "parseSize treats a bare number as bytes",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "parseSize returns NaN for unrecognised text",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "parseRate reads per-second rates",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "parseRate understands duration units like ms does",
+        "origin": "A",
+        "capabilityIds": [
+          "parse-duration",
+          "format-duration-long"
+        ]
+      },
+      {
+        "test": "parseRate returns NaN without a time unit or for nonsense",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "formatSize uses 3 significant digits and decimal units",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "formatSize supports binary and bit units",
+        "origin": "B",
+        "capabilityIds": [
+          "format-bytes",
+          "unit-systems"
+        ]
+      },
+      {
+        "test": "formatRate formats bytes per second",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "formatRate can express the rate per day",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "eta gives a short duration for text inputs",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "eta gives a long duration on request",
+        "origin": "A",
+        "capabilityIds": [
+          "parse-duration",
+          "format-duration-long"
+        ]
+      },
+      {
+        "test": "eta accepts raw numbers (bytes and bytes per second)",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "eta rejects a zero rate",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "budget multiplies a rate by a duration",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      },
+      {
+        "test": "budget output reads naturally through formatSize",
+        "origin": "fusion",
+        "capabilityIds": [
+          "rates"
+        ]
+      }
+    ]
+  },
+  "verification": {
+    "sandbox": "node --permission (read-only creature folder, no child processes, no writes)",
+    "contract": {
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "failures": []
+    },
+    "own": {
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "failures": []
+    },
+    "attempts": [
+      {
+        "attempt": 0,
+        "status": "ALIVE",
+        "contract": {
+          "total": 18,
+          "passed": 18,
+          "failed": 0,
+          "timedOut": false
+        },
+        "own": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0,
+          "timedOut": false
+        }
+      }
+    ]
+  },
+  "originality": {
+    "passed": true,
+    "overlap": 0,
+    "longestCopiedTokens": 0,
+    "thresholds": {
+      "shingleTokens": 20,
+      "maxCopiedRun": 60,
+      "maxOverlap": 0.15
+    },
+    "offenders": []
+  },
+  "verdict": {
+    "status": "ALIVE",
+    "reason": null
+  },
+  "certificate": "eefd4adaea0f52578cd8bacbc9c87c3eac2740fb43c74d2c992fe5f3943c3059"
+}

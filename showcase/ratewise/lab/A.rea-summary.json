@@ -1,0 +1,120 @@
+{
+  "command": "rea analyze-javascript-application <donor> --json",
+  "evidenceId": "ev_1bb7dd1cd16550ceb9b85f5da97011cc8039958484a050339dc55a8fe357feb5",
+  "analyzer": "REA JavaScript application analyzer",
+  "statistics": {
+    "relevant_files": 11,
+    "nested_asar_containers": 0,
+    "text_bytes_read": 40709,
+    "invalid_utf8_files": 0,
+    "parsed_javascript_files": 8,
+    "visited_ast_nodes": 6761,
+    "findings": 35,
+    "modules": 0,
+    "parse_failures": 0
+  },
+  "modules": [
+    {
+      "path": "src/format.test.ts",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "@jest/globals",
+        "src/index.ts"
+      ],
+      "externalImports": [
+        "@jest/globals"
+      ]
+    },
+    {
+      "path": "jest.config.ts",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [
+        "jest"
+      ],
+      "externalImports": [
+        "jest"
+      ]
+    },
+    {
+      "path": "lint-staged.config.ts",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "src/parse.test.ts",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "@jest/globals",
+        "src/index.ts"
+      ],
+      "externalImports": [
+        "@jest/globals"
+      ]
+    },
+    {
+      "path": "src/index.test.ts",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "src/index.ts",
+        "@jest/globals"
+      ],
+      "externalImports": [
+        "@jest/globals"
+      ]
+    },
+    {
+      "path": "src/index.ts",
+      "format": "esm",
+      "exports": [
+        "format",
+        "ms",
+        "parse",
+        "parseStrict"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "tsdown.config.ts",
+      "format": "esm",
+      "exports": [
+        "default"
+      ],
+      "internalImports": [
+        "tsdown"
+      ],
+      "externalImports": [
+        "tsdown"
+      ]
+    },
+    {
+      "path": "src/parse-strict.test.ts",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "src/index.ts",
+        "@jest/globals"
+      ],
+      "externalImports": [
+        "@jest/globals"
+      ]
+    }
+  ],
+  "limitations": [
+    "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+    "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+    "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+    "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+    "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+  ]
+}

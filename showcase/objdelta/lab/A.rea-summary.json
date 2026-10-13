@@ -1,0 +1,125 @@
+{
+  "command": "rea analyze-javascript-application <donor> --json",
+  "evidenceId": "ev_c5cb1afc65ab57b63353f390d10b1162137a084ef79892953c2de1466707580d",
+  "analyzer": "REA JavaScript application analyzer",
+  "statistics": {
+    "relevant_files": 11,
+    "nested_asar_containers": 0,
+    "text_bytes_read": 25909,
+    "invalid_utf8_files": 0,
+    "parsed_javascript_files": 9,
+    "visited_ast_nodes": 4933,
+    "findings": 46,
+    "modules": 0,
+    "parse_failures": 0
+  },
+  "modules": [
+    {
+      "path": "bench/fixtures/basic.js",
+      "format": "commonjs",
+      "exports": [
+        "bar",
+        "foo"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "src/alts.js",
+      "format": "esm",
+      "exports": [
+        "v225",
+        "v227",
+        "v246",
+        "v255"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/index.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "src/index.js"
+      ],
+      "externalImports": [
+        "uvu/assert",
+        "uvu"
+      ]
+    },
+    {
+      "path": "src/index.js",
+      "format": "esm",
+      "exports": [
+        "dequal"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "bench/index.js",
+      "format": "commonjs",
+      "exports": [],
+      "internalImports": [],
+      "externalImports": [
+        "klona",
+        "deep-equal",
+        "benchmark",
+        "lodash/isEqual",
+        "assert",
+        "dequal",
+        "path",
+        "dequal/lite",
+        "nano-equal",
+        "fast-deep-equal",
+        "util"
+      ]
+    },
+    {
+      "path": "index.d.ts",
+      "format": "unknown",
+      "exports": [],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "test/lite.js",
+      "format": "esm",
+      "exports": [],
+      "internalImports": [
+        "src/lite.js"
+      ],
+      "externalImports": [
+        "uvu",
+        "uvu/assert"
+      ]
+    },
+    {
+      "path": "src/lite.js",
+      "format": "esm",
+      "exports": [
+        "dequal"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    },
+    {
+      "path": "bench/fixtures/complex.js",
+      "format": "commonjs",
+      "exports": [
+        "bar",
+        "foo"
+      ],
+      "internalImports": [],
+      "externalImports": []
+    }
+  ],
+  "limitations": [
+    "CommonJS and ESM binding relationships were recovered from inert syntax and resolved only within the inventoried artifact container.",
+    "JavaScript and HTML were parsed as inert text; bundle bootstrap code was never executed.",
+    "Static imports, entrypoints, workers, endpoints, and storage relationships do not prove runtime execution.",
+    "Static paths and relationships may remain unresolved when expressions are dynamic or obfuscated.",
+    "Webpack/Rspack factories were recovered from AST literals; REA did not invoke push handlers or bundle bootstrap code."
+  ]
+}

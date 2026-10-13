@@ -1,0 +1,46 @@
+{
+  "proposals": [
+    {
+      "name": "objdelta",
+      "tagline": "Structural diffs and immutable patches for plain JavaScript data.",
+      "concept": "Compute exactly what changed between two values as a list of path-addressed operations, replay those operations on a value without mutating it, and print them for humans. Useful for undo/redo, audit logs, syncing state and readable test failures.",
+      "inheritsFromA": ["deep-equal", "special-objects"],
+      "inheritsFromB": ["deep-clone", "clone-builtins"],
+      "newCapability": "diff/patch: equality tells where values differ, cloning makes the patched result independent. Round-trip guarantee: patch(a, diff(a, b)) equals b, and a is untouched.",
+      "whyItIsNew": "dequal only says 'different'; klona only copies. Together they can say what is different and produce a new value with exactly those changes.",
+      "api": [
+        { "name": "equal", "signature": "equal(a: unknown, b: unknown): boolean", "description": "Deep equality for objects, arrays, Date, RegExp, Map, Set and NaN." },
+        { "name": "clone", "signature": "clone<T>(value: T): T", "description": "Deep, independent copy including Date, RegExp, Map and Set." },
+        { "name": "diff", "signature": "diff(before: unknown, after: unknown): Array<{ op: 'add'|'remove'|'replace', path: Array<string|number>, value?: unknown }>", "description": "Operations that turn before into after. Object keys follow before's order, then new keys; extra array items are added in order or removed from the end." },
+        { "name": "patch", "signature": "patch<T>(value: T, ops: Op[]): T", "description": "Applies operations to a deep clone of value. Never mutates its inputs; inserted values are cloned." },
+        { "name": "summarize", "signature": "summarize(ops: Op[]): string[]", "description": "Human-readable lines: '~ user.name', '+ tags[2]', '- legacy'." }
+      ],
+      "cliCommand": "objdelta",
+      "cliExamples": ["objdelta before.json after.json", "objdelta before.json after.json --json"]
+    },
+    {
+      "name": "snapshot-guard",
+      "tagline": "Detect when code mutated data it should not have.",
+      "concept": "Clone a value before calling a function, compare afterwards, and report mutations.",
+      "inheritsFromA": ["deep-equal"],
+      "inheritsFromB": ["deep-clone"],
+      "newCapability": "Mutation detection around function calls.",
+      "whyItIsNew": "Combines a before-snapshot with an equality check into a guard.",
+      "api": [{ "name": "guard", "signature": "guard(fn, ...args): { result, mutated: boolean }", "description": "Runs fn and reports whether arguments changed." }],
+      "cliCommand": "snapshot-guard",
+      "cliExamples": []
+    },
+    {
+      "name": "dedupe-deep",
+      "tagline": "Remove structurally duplicate items from collections.",
+      "concept": "Deduplicate arrays of objects by deep equality and return independent copies.",
+      "inheritsFromA": ["deep-equal"],
+      "inheritsFromB": ["deep-clone"],
+      "newCapability": "Structural deduplication.",
+      "whyItIsNew": "Neither donor operates on collections.",
+      "api": [{ "name": "dedupe", "signature": "dedupe(items: unknown[]): unknown[]", "description": "Unique items by deep equality." }],
+      "cliCommand": "dedupe-deep",
+      "cliExamples": []
+    }
+  ]
+}
