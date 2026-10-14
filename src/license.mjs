@@ -25,7 +25,7 @@ export async function detectLicense(dir, packageJson) {
   let file = null;
 
   const entries = await readdir(dir).catch(() => []);
-  const licenseFile = entries.find((name) => /^(licen[cs]e|copying|unlicense)(\.|$)/i.test(name));
+  const licenseFile = entries.find((name) => /^(licen[cs]e|copying|unlicense)([._-]|$)/i.test(name));
   if (licenseFile) {
     file = licenseFile;
     const text = await readFile(join(dir, licenseFile), "utf8").catch(() => "");

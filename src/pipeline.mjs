@@ -58,13 +58,27 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
     const donors = {};
     for (const label of ["A", "B"]) {
       const input = state.inputs[label];
-      const resolution = await resolveDonor(brain, label, input, state.options);
-      const donor = await acquireTarget(resolution?.repoUrl ?? input, join(labDir, "cache"), {
-        allowLocal: state.options.allowLocal !== false,
-      });
-      const profile = await profileDonor(donor.path);
+      // Names and websites can map to several open-source builds; take the
+      // first one that clones and passes the license gate.
+      const candidates = (await resolveCandidates(brain, label, input, state.options)) ?? [null];
+      let donor, profile, gate, resolution, lastError;
+      for (const [index, candidate] of candidates.entries()) {
+        try {
+          donor = await acquireTarget(candidate?.repoUrl ?? input, join(labDir, "cache"), {
+            allowLocal: state.options.allowLocal !== false,
+          });
+        } catch (error) {
+          lastError = error;
+          if (!candidate) throw error;
+          continue;
+        }
+        profile = await profileDonor(donor.path);
+        gate = licenseGate(profile.license, state.options);
+        resolution = candidate;
+        if (gate.ok || !candidate || index === candidates.length - 1) break;
+      }
+      if (!donor) throw lastError ?? new Error(`Could not acquire "${input}".`);
       await writeJson(join(runDir, "donors", `${label}.profile.json`), profile);
-      const gate = licenseGate(profile.license, state.options);
       donors[label] = { ...donor, input, resolution, packageName: profile.name, license: profile.license, gate };
       const display = resolution ? input : donor.name;
       donors[label].display = display;
@@ -203,10 +217,10 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
 
 /**
  * Names ("Spotify") and websites ("instagram.com") are never dissected
- * directly. The brain proposes open-source twins; the first one that really
- * exists on GitHub becomes the donor.
+ * directly. The brain proposes open-source builds of the same idea; every
+ * candidate that really exists on GitHub is returned, best first.
  */
-async function resolveDonor(brain, label, input, { allowCopyleft = false } = {}) {
+async function resolveCandidates(brain, label, input, { allowCopyleft = false } = {}) {
   const target = classifyTarget(input);
   if (target.kind !== "name" && target.kind !== "website") return null;
   log.info(`${label}: locating ${input}…`);
@@ -216,18 +230,18 @@ async function resolveDonor(brain, label, input, { allowCopyleft = false } = {})
     prompt: resolvePrompt(input, target.kind),
     schema: Resolution,
   });
+  const found = [];
   for (const candidate of answer.candidates) {
     const repo = candidate.repo.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").trim();
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
-    if (!allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL|CC-BY-SA)/i.test(candidate.license)) {
-      continue;
-    }
+    if (!allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL|CC-BY-SA)/i.test(candidate.license)) continue;
     const repoUrl = `https://github.com/${repo}.git`;
-    if (await repositoryExists(repoUrl)) {
-      return { tier: "twin", from: input, product: answer.product, essence: answer.essence, repo, repoUrl, why: candidate.why };
-    }
+    if (!(await repositoryExists(repoUrl))) continue;
+    found.push({ tier: "twin", from: input, product: answer.product, essence: answer.essence, repo, repoUrl, why: candidate.why });
+    if (found.length === 4) break;
   }
-  throw new Error(`No open-source twin found for "${input}". Try a repository URL instead.`);
+  if (!found.length) throw new Error(`Could not find a usable open-source build to study for "${input}". Try a repository URL instead.`);
+  return found;
 }
 
 async function finish(runDir, state, details = {}) {
