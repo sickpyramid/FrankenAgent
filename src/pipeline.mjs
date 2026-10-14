@@ -4,6 +4,7 @@ import { basename, join, relative, sep } from "node:path";
 import { createInterface } from "node:readline/promises";
 
 import { acquireTarget, classifyTarget, repositoryExists } from "./acquire.mjs";
+import { findTwins } from "./twins.mjs";
 import { createBrain } from "./brain.mjs";
 import { licenseGate } from "./license.mjs";
 import { checkOriginality } from "./originality.mjs";
@@ -56,11 +57,15 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   log.step("Intake: acquiring donors");
   if (!state.donors) {
     const donors = {};
-    for (const label of ["A", "B"]) {
+    // Locate both donors at once (a quick GitHub search each), then dissect.
+    const located = await Promise.all(
+      ["A", "B"].map((label) => resolveCandidates(brain, label, state.inputs[label], { ...state.options, labDir, runDir })),
+    );
+    for (const [slot, label] of ["A", "B"].entries()) {
       const input = state.inputs[label];
       // Names and websites can map to several open-source builds; take the
-      // first one that clones and passes the license gate.
-      const candidates = (await resolveCandidates(brain, label, input, state.options)) ?? [null];
+      // best-ranked one that clones and passes the license check.
+      const candidates = located[slot] ?? [null];
       let donor, profile, gate, resolution, lastError, firstAcceptable;
       for (const [index, candidate] of candidates.entries()) {
         try {
@@ -224,10 +229,34 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
  * directly. The brain proposes open-source builds of the same idea; every
  * candidate that really exists on GitHub is returned, best first.
  */
-async function resolveCandidates(brain, label, input, { allowCopyleft = false, strictLicense = false } = {}) {
+async function resolveCandidates(brain, label, input, { allowCopyleft = false, strictLicense = false, labDir, runDir } = {}) {
   const target = classifyTarget(input);
   if (target.kind !== "name" && target.kind !== "website") return null;
   log.info(`${label}: locating ${input}…`);
+
+  // Fast path: GitHub search ranked by similarity, relevance and REA compatibility.
+  try {
+    const ranked = await findTwins(input, { cacheDir: labDir ? join(labDir, "cache", "twins") : null });
+    const usable = ranked.filter((c) => !(strictLicense && !allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL)/i.test(c.license ?? "")));
+    if (runDir) await writeJson(join(runDir, "donors", `${label}.candidates.json`), { input, ranked });
+    if (usable.length) {
+      return usable.slice(0, 4).map((c) => ({
+        tier: "twin",
+        source: "github-search",
+        from: input,
+        product: input,
+        repo: c.repo,
+        repoUrl: c.repoUrl,
+        why: c.description,
+        score: c.score,
+        scores: c.scores,
+      }));
+    }
+  } catch (error) {
+    log.info(`${label}: quick search unavailable (${String(error.message).slice(0, 80)}), asking the brain…`);
+  }
+
+  // Fallback: the brain proposes candidates from what it knows.
   const answer = await brain.ask({
     stage: `resolve-${label}`,
     system: SYSTEM,
