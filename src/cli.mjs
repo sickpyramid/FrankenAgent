@@ -26,7 +26,9 @@ Donors
 
 Options
   --pick <n>          Which of the 3 proposed creatures to grow (default: ask, or 1)
-  --brain <name>      anthropic | claude-cli | handoff (default: auto)
+  --brain <name>      anthropic | claude-cli | kilo | hybrid | handoff (default: auto)
+                      hybrid: Kilo Gateway for lookups/specs/concepts,
+                      Claude CLI for contract/grow/repair, each falling back
   --model <id>        Model for the brain (default: claude-opus-5-5)
   --lab <dir>         Lab directory (default: ./.reafuse)
   --max-repairs <n>   Repair attempts after a failed verification (default: 2)

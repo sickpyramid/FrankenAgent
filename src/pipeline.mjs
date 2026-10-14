@@ -58,7 +58,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
     const donors = {};
     for (const label of ["A", "B"]) {
       const input = state.inputs[label];
-      const resolution = await resolveDonor(brain, label, input);
+      const resolution = await resolveDonor(brain, label, input, state.options);
       const donor = await acquireTarget(resolution?.repoUrl ?? input, join(labDir, "cache"), {
         allowLocal: state.options.allowLocal !== false,
       });
@@ -204,7 +204,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
  * directly. The brain proposes open-source twins; the first one that really
  * exists on GitHub becomes the donor.
  */
-async function resolveDonor(brain, label, input) {
+async function resolveDonor(brain, label, input, { allowCopyleft = false } = {}) {
   const target = classifyTarget(input);
   if (target.kind !== "name" && target.kind !== "website") return null;
   log.info(`${label}: "${input}" is ${target.kind === "name" ? "a name" : "a website"} — searching for an open-source twin…`);
@@ -217,6 +217,10 @@ async function resolveDonor(brain, label, input) {
   for (const candidate of answer.candidates) {
     const repo = candidate.repo.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").trim();
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
+    if (!allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL|CC-BY-SA)/i.test(candidate.license)) {
+      log.info(`${label}: skipping ${repo} (${candidate.license} is copyleft)`);
+      continue;
+    }
     const repoUrl = `https://github.com/${repo}.git`;
     if (await repositoryExists(repoUrl)) {
       log.info(`${label}: twin found → ${repo} (${candidate.why})`);

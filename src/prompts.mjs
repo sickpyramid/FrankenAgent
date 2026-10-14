@@ -123,7 +123,7 @@ ReaFuse never dissects closed-source products. Instead, find open-source "twins"
 
 Rules:
 - Only list repositories you are confident exist on GitHub, as owner/name.
-- Prefer JavaScript or TypeScript projects with permissive licenses (MIT, Apache-2.0, BSD, ISC).
+- Prefer JavaScript or TypeScript projects with permissive licenses (MIT, Apache-2.0, BSD, ISC). Avoid GPL, AGPL, LGPL and MPL projects.
 - Prefer focused libraries or small apps that capture the product's signature capability over giant platforms.
 - If "${input}" is itself an open-source project, list its own repository first.`;
 }

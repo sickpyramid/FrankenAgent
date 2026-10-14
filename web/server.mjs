@@ -190,29 +190,47 @@ async function listFiles(dir) {
   return out.sort();
 }
 
+/**
+ * Health checks never spend model tokens: Claude CLI is checked with
+ * "claude auth status", Kilo's free tier needs no check at all.
+ */
+async function claudeStatus() {
+  const bin = findClaudeCli();
+  if (!bin) return { ready: false, detail: "claude-cli not installed" };
+  const probe = await runCommand(bin, ["auth", "status"], { timeoutMs: 30_000 });
+  try {
+    return JSON.parse(probe.stdout).loggedIn ? { ready: true, detail: "claude-cli" } : { ready: false, detail: "claude-cli logged out" };
+  } catch {
+    return { ready: false, detail: "claude-cli auth status unavailable" };
+  }
+}
+
+function kiloStatus() {
+  const model = process.env.REAFUSE_KILO_MODEL ?? "kilo-auto/free";
+  const keyed = Boolean(process.env.KILO_API_KEY || process.env.KILO_API_KEY_FILE);
+  const ready = keyed || /[/:]free$/.test(model);
+  return { ready, detail: ready ? `kilo ${model}` : "kilo needs an API key for paid models" };
+}
+
 async function brainStatus() {
   const provider = BRAIN === "auto" ? autoProvider() : BRAIN;
-  let ready = provider !== "handoff";
-  let detail = provider;
-  if (provider === "claude-cli") {
-    const bin = findClaudeCli();
-    const probe = bin ? await runCommand(bin, ["-p", "--output-format", "json", "--tools", "", "--no-session-persistence"], { input: "Reply with OK", timeoutMs: 60_000 }) : null;
-    try {
-      const envelope = JSON.parse(probe?.stdout ?? "");
-      ready = !envelope.is_error;
-      detail = ready ? "claude-cli" : `claude-cli: ${envelope.result}`;
-    } catch {
-      ready = false;
-      detail = bin ? "claude-cli: no response" : "claude-cli: not installed";
-    }
-  }
-  return { provider, ready, detail, checkedAt: Date.now() };
+  const parts = [];
+  if (provider === "claude-cli" || provider === "hybrid") parts.push(await claudeStatus());
+  if (provider === "kilo" || provider === "hybrid") parts.push(kiloStatus());
+  if (provider === "anthropic") parts.push({ ready: true, detail: "anthropic api" });
+  if (provider === "handoff") parts.push({ ready: false, detail: "handoff brain needs an operator" });
+  // Hybrid stays open while either half works: each stage falls back to the other.
+  const ready = parts.some((part) => part.ready);
+  return { provider, ready, detail: parts.map((p) => `${p.detail} ${p.ready ? "✓" : "✕"}`).join(" · "), checkedAt: Date.now() };
 }
 
 let brainCache = null;
+let brainPending = null;
 async function cachedBrainStatus() {
-  const maxAge = brainCache?.ready ? 5 * 60_000 : 20_000;
-  if (!brainCache || Date.now() - brainCache.checkedAt > maxAge) brainCache = await brainStatus();
+  const maxAge = brainCache?.ready ? 10 * 60_000 : 60_000;
+  if (brainCache && Date.now() - brainCache.checkedAt < maxAge) return brainCache;
+  brainPending ??= brainStatus().finally(() => (brainPending = null));
+  brainCache = await brainPending;
   return brainCache;
 }
 
@@ -248,7 +266,7 @@ async function api(req, res, url) {
     const brain = await cachedBrainStatus();
     if (!brain.ready) return send(res, 503, { error: "The lab's brain is offline right now. Browse the specimens while we reconnect it." });
     if (rateLimited(clientIp(req))) return send(res, 429, { error: "The lab is cooling down. Try again in a little while." });
-    const runDir = await createRun(LAB, a, b, { pick: null, noRea: false, allowLocal: false, maxRepairs: 2 });
+    const runDir = await createRun(LAB, a, b, { pick: null, noRea: false, allowLocal: false, allowCopyleft: body.allowCopyleft === true, maxRepairs: 2 });
     const id = runDir.split(sep).pop();
     await appendFile(join(runDir, "live.log"), `⚡ Subjects received: [A] ${a}  ×  [B] ${b}\n`);
     enqueue(id, ["resume", runDir, "--await-pick", "--brain", BRAIN]);

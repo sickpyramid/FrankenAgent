@@ -2,7 +2,7 @@
 FROM node:24-bookworm-slim
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git ca-certificates \
+  && apt-get install -y --no-install-recommends git ca-certificates procps \
   && rm -rf /var/lib/apt/lists/*
 
 # The lab's brain: Claude Code CLI. Log in once per server:

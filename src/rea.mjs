@@ -28,7 +28,15 @@ export async function analyzeWithRea(targetPath, { timeoutMs = 300_000 } = {}) {
   const command = "rea analyze-javascript-application <donor> --json";
   if (result.timedOut) return { ok: false, command, error: `REA timed out after ${timeoutMs}ms` };
   if (result.code !== 0) {
-    return { ok: false, command, error: `REA exited with code ${result.code}: ${lastLines(result.stderr)}` };
+    // REA can exit non-zero while still emitting a usable evidence graph
+    // (one unanalysable file is reported as a limitation). Keep it if so.
+    try {
+      const evidence = JSON.parse(result.stdout);
+      if (evidence?.normalized_result?.graph) return { ok: true, command, evidence, partial: true };
+    } catch {
+      // fall through to the error below
+    }
+    return { ok: false, command, error: `REA exited with code ${result.code}: ${lastLines(result.stderr) || result.stdout.trim().slice(-300)}` };
   }
   try {
     return { ok: true, command, evidence: JSON.parse(result.stdout) };

@@ -13,6 +13,9 @@ services:
     mem_limit: 900m
     environment:
       REAFUSE_RUNS_PER_HOUR: ${REAFUSE_RUNS_PER_HOUR:-6}
+      # hybrid: Kilo Gateway (free) for lookups, specs and concepts; Claude CLI for contract, grow and repair.
+      REAFUSE_BRAIN: ${REAFUSE_BRAIN:-hybrid}
+      REAFUSE_KILO_MODEL: ${REAFUSE_KILO_MODEL:-kilo-auto/free}
 volumes:
   reafuse_data:
     name: reafuse_data

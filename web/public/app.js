@@ -26,7 +26,7 @@ async function refreshStatus() {
   try {
     const status = await api("status");
     const brain = status.brain;
-    $("#st-brain").innerHTML = `<i class="dot ${brain.ready ? "ok" : "bad"}"></i>BRAIN ${brain.ready ? "READY" : "OFFLINE"}`;
+    $("#st-brain").innerHTML = `<i class="dot ${brain.ready ? "ok" : "bad"}"></i>BRAIN ${brain.ready ? (brain.provider === "hybrid" ? "HYBRID" : "READY") : "OFFLINE"}`;
     $("#st-brain").title = brain.detail;
     $("#st-rea").textContent = `REA ${status.rea ?? "?"}`;
     $("#st-queue").innerHTML = `<i class="dot ${status.running ? "busy" : "ok"}"></i>${status.running ? "FUSING" : "IDLE"} · Q${status.queue}`;
@@ -375,5 +375,5 @@ window.addEventListener("popstate", route);
 wireTerminal("donor-a", "kind-a", "a");
 wireTerminal("donor-b", "kind-b", "b");
 refreshStatus();
-setInterval(refreshStatus, 30_000);
+setInterval(refreshStatus, 120_000);
 route();
