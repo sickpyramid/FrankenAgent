@@ -101,10 +101,15 @@ function modelLabel(name, model) {
   return model;
 }
 
+/**
+ * Zero-setup default: an Anthropic key if present; otherwise Kilo's free
+ * models, with a local Claude CLI (if installed) taking the code-writing
+ * stages. "handoff" is only used when asked for explicitly.
+ */
 export function autoProvider() {
   if (process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) return "anthropic";
-  if (findClaudeCli()) return "claude-cli";
-  return "handoff";
+  if (findClaudeCli()) return "hybrid";
+  return "kilo";
 }
 
 function validate(schema, value, source) {

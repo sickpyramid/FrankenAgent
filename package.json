@@ -21,6 +21,7 @@
     "node": ">=22.19.0"
   },
   "scripts": {
+    "start": "node bin/reafuse.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "lab": "node --env-file-if-exists=.env web/server.mjs",
     "mcp": "node --env-file-if-exists=.env bin/reafuse.mjs mcp",

@@ -27,7 +27,8 @@ Donors
 
 Options
   --pick <n>          Which of the 3 proposed creatures to grow (default: ask, or 1)
-  --brain <name>      anthropic | claude-cli | kilo | hybrid | handoff (default: auto)
+  --brain <name>      auto | kilo | claude-cli | hybrid | anthropic | handoff (default: auto)
+                      auto: Anthropic key, else Kilo free (+ your Claude CLI for code if installed)
                       hybrid: Kilo Gateway for lookups/specs/concepts,
                       Claude CLI for contract/grow/repair, each falling back
   --model <id>        Model for the brain (default: claude-opus-5-5)
@@ -57,6 +58,7 @@ export async function main(argv) {
       "await-pick": { type: "boolean", default: false },
       "strict-license": { type: "boolean", default: false },
       "no-local": { type: "boolean", default: false },
+      json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
   });
@@ -134,23 +136,49 @@ export async function main(argv) {
   if (command === "doctor") {
     const { run } = await import("./util.mjs");
     const git = await run("git", ["--version"], { timeoutMs: 10_000 });
-    console.log(
-      JSON.stringify(
-        {
-          reafuse: REAFUSE_VERSION,
-          node: process.version,
-          rea: reaVersion(),
-          git: git.code === 0 ? git.stdout.trim() : "missing",
-          brain: {
-            auto: autoProvider(),
-            anthropicKey: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
-            claudeCli: findClaudeCli(),
-          },
-        },
-        null,
-        2,
-      ),
-    );
+    const claudeBin = findClaudeCli();
+    const claudeLoggedIn = claudeBin
+      ? await run(claudeBin, ["auth", "status"], { timeoutMs: 30_000 }).then((r) => {
+          try {
+            return Boolean(JSON.parse(r.stdout).loggedIn);
+          } catch {
+            return false;
+          }
+        })
+      : false;
+    const brain = values.brain ?? process.env.REAFUSE_BRAIN ?? "auto";
+    const resolved = brain === "auto" ? autoProvider() : brain;
+    const major = Number(process.versions.node.split(".")[0]);
+    const report = {
+      reafuse: REAFUSE_VERSION,
+      node: process.version,
+      rea: reaVersion(),
+      git: git.code === 0 ? git.stdout.trim() : null,
+      brain: { setting: brain, uses: resolved, anthropicKey: Boolean(process.env.ANTHROPIC_API_KEY), kiloKey: Boolean(process.env.KILO_API_KEY), claudeCli: claudeBin, claudeLoggedIn },
+    };
+    if (values.json) {
+      console.log(JSON.stringify(report, null, 2));
+      return 0;
+    }
+    const line = (ok, label, detail, fix) => console.log(`  ${ok ? "✓" : "✗"} ${label.padEnd(10)} ${detail}${!ok && fix ? `
+      → ${fix}` : ""}`);
+    console.log(`ReaFuse ${REAFUSE_VERSION} doctor
+`);
+    line(major >= 22, "Node.js", process.version, "Install Node.js 22 or newer from https://nodejs.org");
+    line(Boolean(report.git), "git", report.git ?? "not found", "Install git from https://git-scm.com");
+    line(Boolean(report.rea), "REA", report.rea ? `rea-agents ${report.rea}` : "not installed", "Run npm install inside the ReaFuse folder");
+    const brainNotes = {
+      anthropic: "Anthropic API key",
+      hybrid: claudeLoggedIn ? "Kilo (free) for routine stages + your Claude CLI for code" : "Kilo (free); Claude CLI found but not logged in, so Kilo does everything",
+      kilo: "Kilo Gateway free models, no account needed",
+      "claude-cli": claudeLoggedIn ? "your Claude CLI login" : "Claude CLI is not logged in",
+      handoff: "you (or your agent) answer each step by hand",
+    };
+    const brainOk = resolved !== "claude-cli" || claudeLoggedIn;
+    line(brainOk, "brain", `${resolved}: ${brainNotes[resolved] ?? resolved}`, "Run `claude` once and type /login, or use --brain kilo");
+    console.log(`
+  Try it:  reafuse fuse vercel/ms sindresorhus/pretty-bytes
+  Or with app names:  reafuse fuse Spotify WhatsApp`);
     return 0;
   }
 
@@ -161,7 +189,7 @@ async function advance(runDir, labDir, values) {
   try {
     const { report } = await advanceRun(runDir, {
       labDir,
-      brainProvider: values.brain,
+      brainProvider: values.brain ?? process.env.REAFUSE_BRAIN,
       model: values.model,
       interactive: process.stdin.isTTY && !values.pick && !values["await-pick"],
       awaitPick: values["await-pick"],
