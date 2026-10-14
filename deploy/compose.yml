@@ -1,5 +1,6 @@
-# Production: docker compose -f deploy/compose.yml up -d --build
-# The container listens only on the Docker bridge; a reverse proxy (Caddy) exposes it.
+# docker compose -f deploy/compose.yml up -d --build
+# Settings come from deploy/.env (see ../.env.example). The lab listens on
+# REAFUSE_BIND (default 127.0.0.1:4400); put a reverse proxy in front for HTTPS.
 name: reafuse
 services:
   reafuse:
@@ -7,15 +8,18 @@ services:
     container_name: reafuse
     restart: unless-stopped
     ports:
-      - "172.17.0.1:${REAFUSE_PORT:-8090}:4400"
+      - "${REAFUSE_BIND:-127.0.0.1:4400}:4400"
     volumes:
       - reafuse_data:/data
-    mem_limit: 900m
+    mem_limit: ${REAFUSE_MEM_LIMIT:-900m}
     environment:
-      REAFUSE_RUNS_PER_HOUR: ${REAFUSE_RUNS_PER_HOUR:-6}
-      # hybrid: Kilo Gateway (free) for lookups, specs and concepts; Claude CLI for contract, grow and repair.
-      REAFUSE_BRAIN: ${REAFUSE_BRAIN:-hybrid}
+      REAFUSE_BRAIN: ${REAFUSE_BRAIN:-auto}
       REAFUSE_KILO_MODEL: ${REAFUSE_KILO_MODEL:-kilo-auto/free}
+      REAFUSE_CLAUDE_MODEL: ${REAFUSE_CLAUDE_MODEL:-}
+      REAFUSE_RUNS_PER_HOUR: ${REAFUSE_RUNS_PER_HOUR:-6}
+      REAFUSE_MAX_CONCURRENT: ${REAFUSE_MAX_CONCURRENT:-1}
+      KILO_API_KEY: ${KILO_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
 volumes:
   reafuse_data:
     name: reafuse_data

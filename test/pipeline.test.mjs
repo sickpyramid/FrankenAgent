@@ -127,12 +127,25 @@ test("the handoff brain pauses a run at the first unanswered stage", async () =>
   await rm(lab, { recursive: true, force: true });
 });
 
-test("a copyleft donor is rejected before any brain call", async () => {
+test("strict license mode rejects a copyleft donor before any brain call", async () => {
   const lab = await mkdtemp(join(tmpdir(), "reafuse-lab-"));
   const gpl = fileURLToPath(new URL("./fixtures/donor-gpl", import.meta.url));
-  const runDir = await createRun(lab, donor, gpl, { noRea: true });
+  const runDir = await createRun(lab, donor, gpl, { noRea: true, strictLicense: true });
   const { report } = await advanceRun(runDir, { labDir: lab, brainProvider: "handoff" });
   assert.equal(report.verdict.status, "REJECTED");
   assert.match(report.verdict.reason, /copyleft/);
+  await rm(lab, { recursive: true, force: true });
+});
+
+test("by default a copyleft donor is recorded with a warning and the run continues", async () => {
+  const lab = await mkdtemp(join(tmpdir(), "reafuse-lab-"));
+  const gpl = fileURLToPath(new URL("./fixtures/donor-gpl", import.meta.url));
+  const runDir = await createRun(lab, donor, gpl, { pick: 1, noRea: true });
+  await assert.rejects(advanceRun(runDir, { labDir: lab, brainProvider: "handoff" }), (error) => {
+    assert.ok(error instanceof HandoffPending); // reached the brain: not rejected
+    return true;
+  });
+  const state = JSON.parse(await readFile(join(runDir, "run.json"), "utf8"));
+  assert.equal(state.donors.B.gate.warning, true);
   await rm(lab, { recursive: true, force: true });
 });

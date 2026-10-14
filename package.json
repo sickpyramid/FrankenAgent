@@ -11,18 +11,26 @@
     "src",
     "README.md",
     "LICENSE",
-    "NOTICE.md"
+    "NOTICE.md",
+    "web",
+    "skills",
+    ".env.example",
+    "showcase"
   ],
   "engines": {
     "node": ">=22.19.0"
   },
   "scripts": {
     "test": "node --test \"test/*.test.mjs\"",
+    "lab": "node --env-file-if-exists=.env web/server.mjs",
+    "mcp": "node --env-file-if-exists=.env bin/reafuse.mjs mcp",
+    "doctor": "node --env-file-if-exists=.env bin/reafuse.mjs doctor",
     "rea:doctor": "rea doctor --json"
   },
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",
+    "@modelcontextprotocol/server": "2.3.1",
     "rea-agents": "6.4.0",
     "zod": "4.6.7"
   },

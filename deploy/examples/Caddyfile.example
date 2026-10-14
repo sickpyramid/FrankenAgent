@@ -1,0 +1,9 @@
+# HTTPS in front of the ReaFuse lab. Replace the hostname; keep flush_interval
+# so the live lab tape streams instead of buffering.
+reafuse.example.com {
+  encode gzip
+  header -Server
+  reverse_proxy 127.0.0.1:4400 {
+    flush_interval -1
+  }
+}

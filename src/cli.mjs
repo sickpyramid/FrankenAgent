@@ -18,6 +18,7 @@ Usage
   reafuse resume <run-id|run-dir> [options]  Continue a run (after a handoff, or with a new --pick)
   reafuse dissect <donor> [--no-rea]         Profile one donor (no brain needed)
   reafuse runs                               List runs in this lab
+  reafuse mcp                                Run as an MCP server (your agent is the brain)
   reafuse doctor                             Check REA, git and brain availability
 
 Donors
@@ -33,7 +34,8 @@ Options
   --lab <dir>         Lab directory (default: ./.reafuse)
   --max-repairs <n>   Repair attempts after a failed verification (default: 2)
   --no-rea            Skip REA static analysis
-  --allow-copyleft    Allow copyleft donors (behavior only)
+  --strict-license    Refuse copyleft and unidentified licenses (default: record and warn)
+  --allow-copyleft    With --strict-license, still allow copyleft donors
   --owned             You own both donors (skips the license gate)
   --await-pick        Stop after proposing creatures (exit code 4)
   --no-local          Refuse local directories (for servers)
@@ -53,6 +55,7 @@ export async function main(argv) {
       "allow-copyleft": { type: "boolean", default: false },
       owned: { type: "boolean", default: false },
       "await-pick": { type: "boolean", default: false },
+      "strict-license": { type: "boolean", default: false },
       "no-local": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
@@ -73,6 +76,7 @@ export async function main(argv) {
       allowCopyleft: values["allow-copyleft"],
       owned: values.owned,
       allowLocal: !values["no-local"],
+      strictLicense: values["strict-license"],
       maxRepairs: values["max-repairs"] ? Number(values["max-repairs"]) : 2,
     });
     log.info(`Run: ${runDir}`);
@@ -113,6 +117,12 @@ export async function main(argv) {
     }
     console.log(JSON.stringify(output, null, 2));
     return 0;
+  }
+
+  if (command === "mcp") {
+    const { startMcpServer } = await import("./mcp.mjs");
+    await startMcpServer();
+    return undefined; // the stdio transport keeps the process alive
   }
 
   if (command === "runs") {

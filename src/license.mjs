@@ -60,17 +60,22 @@ export function categorize(spdx) {
 }
 
 /**
- * License gate. ReaFuse only lifts behavior (ideas), never code, but v1
- * still refuses donors whose terms are unknown or copyleft unless the
- * operator explicitly opts in.
+ * License check. ReaFuse learns behavior (ideas) and never copies code, which
+ * the originality scan enforces, so by default every license is recorded and
+ * flagged but nothing is blocked. Strict mode (--strict-license) refuses
+ * copyleft and unidentified licenses for operators who want that policy.
  */
-export function licenseGate(license, { owned = false, allowCopyleft = false } = {}) {
+export function licenseGate(license, { owned = false, allowCopyleft = false, strictLicense = false } = {}) {
   if (owned) return { ok: true, reason: "Operator declared ownership of this donor." };
   if (license.category === "permissive") return { ok: true, reason: `${license.spdx} is permissive.` };
+  if (!strictLicense) {
+    const label = license.spdx ?? "No recognisable license";
+    return { ok: true, warning: true, reason: `${label}: recorded. Behavior only, no code is reused; check the terms before shipping the creature.` };
+  }
   if (license.category === "copyleft") {
     return allowCopyleft
       ? { ok: true, reason: `${license.spdx} is copyleft; allowed by --allow-copyleft (behavior only, no code reuse).` }
-      : { ok: false, reason: `${license.spdx} is copyleft. Re-run with --allow-copyleft to fuse behavior only.` };
+      : { ok: false, reason: `${license.spdx} is copyleft. Strict mode: re-run with --allow-copyleft to fuse behavior only.` };
   }
-  return { ok: false, reason: "No recognisable license. Re-run with --owned only if you own this donor." };
+  return { ok: false, reason: "No recognisable license. Strict mode: re-run with --owned only if you own this donor." };
 }

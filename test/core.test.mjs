@@ -48,10 +48,15 @@ test("license detection and gate", async () => {
   assert.equal(licenseGate(mit).ok, true);
 
   const gpl = await detectLicense(join(fixtures, "donor-gpl"), { license: "GPL-3.0-only" });
-  assert.equal(licenseGate(gpl).ok, false);
-  assert.equal(licenseGate(gpl, { allowCopyleft: true }).ok, true);
-  assert.equal(licenseGate({ category: "unknown" }).ok, false);
-  assert.equal(licenseGate({ category: "unknown" }, { owned: true }).ok, true);
+  // Default: record and warn, never block (behavior only, no code reuse).
+  assert.equal(licenseGate(gpl).ok, true);
+  assert.equal(licenseGate(gpl).warning, true);
+  assert.equal(licenseGate({ category: "unknown", spdx: null }).ok, true);
+  // Strict mode keeps the old policy.
+  assert.equal(licenseGate(gpl, { strictLicense: true }).ok, false);
+  assert.equal(licenseGate(gpl, { strictLicense: true, allowCopyleft: true }).ok, true);
+  assert.equal(licenseGate({ category: "unknown" }, { strictLicense: true }).ok, false);
+  assert.equal(licenseGate({ category: "unknown" }, { strictLicense: true, owned: true }).ok, true);
 });
 
 test("profileDonor reads metadata, entrypoints and sources without executing them", async () => {

@@ -95,7 +95,7 @@ donor B ─┘   license    REA +     3 ideas  tests      fresh   sandbox    cle
                         cards
 ```
 
-1. **Intake** — clones the donors (shallow, no hooks, no symlinks) and runs a **license gate**. Copyleft and unknown licenses are rejected unless you opt in.
+1. **Intake** — resolves app names and websites to open-source builds, clones the donors (shallow, no hooks, no symlinks) and records each **license**. Licenses are flagged, not blocked (ReaFuse never reuses donor code); `--strict-license` refuses copyleft and unidentified ones.
 2. **Dissect with REA** — [REA (Reverse Engineer Anything)](https://github.com/morluto/rea) statically analyses each donor (modules, exports, imports — donor code is parsed as inert text, never executed). The brain turns REA evidence, README and tests into a **spec card**: behavior only, no code.
 3. **Fuse** — the brain proposes three creatures that inherit from both donors *and* gain a capability neither had. You pick one.
 4. **Contract** — acceptance tests are written **before** the creature exists, each mapped to its origin (A, B or fusion). The creature can never edit them.
@@ -111,45 +111,88 @@ Requires Node.js 22.19+ and git.
 ```bash
 git clone https://github.com/sickpyramid/ReaFuse && cd ReaFuse
 npm install
-npm link        # makes the `reafuse` command available
+npm link            # makes the `reafuse` command available
+cp .env.example .env   # pick a brain, add keys if you use them
 reafuse doctor
 ```
 
-## Usage
+## Use it inside your agent (MCP)
+
+ReaFuse ships an MCP server. Your agent (Claude Code, Codex, Cursor, …) becomes ReaFuse's brain: it receives each reasoning step as a request and answers it, so **no API key is needed**. Replace `/path/to/ReaFuse` with your clone.
+
+**Claude Code**
+
+```bash
+claude mcp add reafuse -- node /path/to/ReaFuse/bin/reafuse.mjs mcp
+```
+
+**Codex** (`~/.codex/config.toml`)
+
+```toml
+[mcp_servers.reafuse]
+command = "node"
+args = ["/path/to/ReaFuse/bin/reafuse.mjs", "mcp"]
+```
+
+**Cursor / any MCP client** (`mcp.json`)
+
+```json
+{ "mcpServers": { "reafuse": { "command": "node", "args": ["/path/to/ReaFuse/bin/reafuse.mjs", "mcp"] } } }
+```
+
+Then ask: *"Fuse Spotify and WhatsApp with ReaFuse."* The tools are `reafuse_fuse`, `reafuse_answer`, `reafuse_pick`, `reafuse_status` and `reafuse_dissect`. To let ReaFuse call a model itself instead, set `REAFUSE_MCP_BRAIN` to `claude-cli`, `anthropic`, `kilo` or `hybrid`.
+
+For agents that load skills, [`skills/reafuse/SKILL.md`](skills/reafuse/SKILL.md) explains the workflow; copy it into your agent's skills folder (for Claude Code: `~/.claude/skills/reafuse/`).
+
+## Usage (CLI)
 
 ```bash
 reafuse fuse <donorA> <donorB> [--pick n]   # full run
 reafuse resume <run-id>                     # continue a paused run, or grow another pick
 reafuse dissect <donor>                     # profile + license + REA evidence, no brain needed
 reafuse runs                                # list runs
+reafuse mcp                                 # MCP server (see above)
 reafuse doctor                              # check REA, git and brain availability
 ```
 
-Donors can be GitHub URLs, `owner/repo` shorthand or local directories. Websites and binaries are on the roadmap.
-
-### Web lab
-
-Type two subjects side by side, such as a repo, a link or just an app name like `Spotify` × `Instagram`, and watch the fusion live. App names and websites are resolved to open-source twins before REA dissects them.
-
-```bash
-node web/server.mjs                                   # http://localhost:4400
-docker compose -f deploy/compose.yml up -d --build    # production (Claude CLI inside)
-docker exec -it reafuse claude                   # one-time login for the lab's brain
-```
+Donors can be GitHub URLs, `owner/repo`, local directories, websites (`instagram.com`) or app names (`Spotify`). Names and websites are studied through a matching open-source JavaScript/TypeScript build.
 
 ### Choosing a brain
 
-| Brain | How | When |
-|---|---|---|
-| `anthropic` | set `ANTHROPIC_API_KEY` | default when a key is present; uses Claude Opus 5.5 with structured outputs |
-| `claude-cli` | a logged-in [Claude Code](https://claude.com/claude-code) CLI on `PATH` (or `REAFUSE_CLAUDE_BIN`) | use your Claude subscription |
-| `handoff` | `--brain handoff` | writes each request to `brain/<stage>.prompt.md` and waits for `<stage>.response.json` — lets any agent (or a human) act as the brain |
+Use your own account; nothing is tied to ours. Set `REAFUSE_BRAIN` in `.env` or pass `--brain`.
 
-Every brain answer is cached in the run folder, so runs are resumable and reproducible regardless of provider. The showcase creatures were produced with the `handoff` brain, with Claude Code answering each stage.
+| Brain | Setup | Notes |
+|---|---|---|
+| `claude-cli` | install [Claude Code](https://claude.com/claude-code), run `claude` once and `/login` | uses your Claude subscription |
+| `anthropic` | `ANTHROPIC_API_KEY` | Claude Opus 5.5 with structured outputs |
+| `kilo` | nothing for free models; `KILO_API_KEY` for paid ones | [Kilo Gateway](https://kilo.ai), default model `kilo-auto/free` |
+| `hybrid` | Claude CLI login + Kilo | Kilo for lookups, spec cards and concepts; Claude for contract, grow and repair; each falls back to the other |
+| `handoff` | nothing | writes each request to `brain/<stage>.prompt.md` and waits for `<stage>.response.json` |
+| `auto` (default) | | Anthropic key → Claude CLI → handoff |
+
+Every brain answer is cached in the run folder, so runs are resumable and reproducible regardless of provider.
+
+### Web lab
+
+Two subjects side by side, live lab tape, concept picking, verdicts and a parts catalog.
+
+```bash
+npm run lab                                         # http://localhost:4400
+```
+
+With Docker (Claude CLI included):
+
+```bash
+cp .env.example deploy/.env                         # choose REAFUSE_BRAIN, add keys
+docker compose -f deploy/compose.yml up -d --build  # binds 127.0.0.1:4400 by default
+docker exec -it reafuse claude                      # only for claude-cli/hybrid: /login once
+```
+
+[`deploy/examples/Caddyfile.example`](deploy/examples/Caddyfile.example) shows HTTPS with live streaming.
 
 ## Responsible use
 
-- Only fuse projects you own or whose licenses permit it. The license gate is a safeguard, not legal advice.
+- ReaFuse is a tool: you are responsible for what you fuse and ship. Donor licenses are recorded in every report; check them before publishing a creature. `--strict-license` enforces a conservative policy.
 - ReaFuse learns **behavior**, never code. The originality scan enforces this; do not disable it to ship copied code.
 - Donor projects keep their own copyrights. Reports credit every donor with its commit and license.
 

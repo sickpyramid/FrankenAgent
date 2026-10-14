@@ -61,7 +61,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
       // Names and websites can map to several open-source builds; take the
       // first one that clones and passes the license gate.
       const candidates = (await resolveCandidates(brain, label, input, state.options)) ?? [null];
-      let donor, profile, gate, resolution, lastError;
+      let donor, profile, gate, resolution, lastError, firstAcceptable;
       for (const [index, candidate] of candidates.entries()) {
         try {
           donor = await acquireTarget(candidate?.repoUrl ?? input, join(labDir, "cache"), {
@@ -75,14 +75,18 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
         profile = await profileDonor(donor.path);
         gate = licenseGate(profile.license, state.options);
         resolution = candidate;
-        if (gate.ok || !candidate || index === candidates.length - 1) break;
+        // Prefer a cleanly licensed build; otherwise keep the first acceptable one.
+        if (gate.ok && !gate.warning) break;
+        if (gate.ok) firstAcceptable ??= { donor, profile, gate, resolution };
+        if (!candidate || index === candidates.length - 1) break;
       }
+      if (firstAcceptable && !(gate.ok && !gate.warning)) ({ donor, profile, gate, resolution } = firstAcceptable);
       if (!donor) throw lastError ?? new Error(`Could not acquire "${input}".`);
       await writeJson(join(runDir, "donors", `${label}.profile.json`), profile);
       donors[label] = { ...donor, input, resolution, packageName: profile.name, license: profile.license, gate };
       const display = resolution ? input : donor.name;
       donors[label].display = display;
-      log.info(`${label}: ${display} ${gate.ok ? "✓" : "✗"}${resolution ? ` (studied through ${resolution.repo}, ${profile.license.spdx ?? "license unknown"})` : ` @ ${donor.commit?.slice(0, 10) ?? "local"}, ${profile.license.spdx ?? "license unknown"}`}`);
+      log.info(`${label}: ${display} ${gate.ok ? (gate.warning ? "⚑" : "✓") : "✗"}${resolution ? ` (studied through ${resolution.repo}, ${profile.license.spdx ?? "license unknown"})` : ` @ ${donor.commit?.slice(0, 10) ?? "local"}, ${profile.license.spdx ?? "license unknown"}`}`);
     }
     state.donors = donors;
     await save();
@@ -220,7 +224,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
  * directly. The brain proposes open-source builds of the same idea; every
  * candidate that really exists on GitHub is returned, best first.
  */
-async function resolveCandidates(brain, label, input, { allowCopyleft = false } = {}) {
+async function resolveCandidates(brain, label, input, { allowCopyleft = false, strictLicense = false } = {}) {
   const target = classifyTarget(input);
   if (target.kind !== "name" && target.kind !== "website") return null;
   log.info(`${label}: locating ${input}…`);
@@ -234,7 +238,9 @@ async function resolveCandidates(brain, label, input, { allowCopyleft = false } 
   for (const candidate of answer.candidates) {
     const repo = candidate.repo.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").trim();
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
-    if (!allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL|CC-BY-SA)/i.test(candidate.license)) continue;
+    if (strictLicense && !allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL|CC-BY-SA)/i.test(candidate.license)) continue;
+    // v1 dissects JavaScript/TypeScript; other languages give REA nothing to read.
+    if (candidate.language && !/(java|type)script|\bjs\b|\bts\b|node|vue|react|svelte|electron/i.test(candidate.language)) continue;
     const repoUrl = `https://github.com/${repo}.git`;
     if (!(await repositoryExists(repoUrl))) continue;
     found.push({ tier: "twin", from: input, product: answer.product, essence: answer.essence, repo, repoUrl, why: candidate.why });
