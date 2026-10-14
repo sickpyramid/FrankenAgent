@@ -161,8 +161,8 @@ function renderDonors(view) {
         <div class="sheet-head"><span>DATASHEET · TERMINAL ${label}</span><span>${donor ? "LOADED" : "PENDING"}</span></div>
         <div class="sheet-body">
           <div class="sheet-name">${esc(donor?.name ?? input)}</div>
-          ${donor?.resolution ? `<div class="twin">Twin of “${esc(donor.resolution.from)}”: ${esc(donor.resolution.why)}</div>` : ""}
-          ${donor ? `<dl><dt>license</dt><dd>${esc(donor.license ?? "unknown")}</dd><dt>commit</dt><dd>${esc(donor.commit?.slice(0, 10) ?? "local")}</dd></dl>` : `<p class="mute">Awaiting intake…</p>`}
+          
+          ${donor ? `<dl>${donor.resolution ? `<dt>studied via</dt><dd>${esc(donor.resolution.repo)}</dd>` : ""}<dt>license</dt><dd>${esc(donor.license ?? "unknown")}</dd><dt>commit</dt><dd>${esc(donor.commit?.slice(0, 10) ?? "local")}</dd></dl>` : `<p class="mute">Awaiting intake…</p>`}
           ${spec ? `<p>${esc(spec.oneLiner)}</p><ul>${spec.capabilities.map((c) => `<li>${esc(c.name)}</li>`).join("")}</ul>` : ""}
         </div>
       </div>`;

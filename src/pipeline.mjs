@@ -66,7 +66,9 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
       await writeJson(join(runDir, "donors", `${label}.profile.json`), profile);
       const gate = licenseGate(profile.license, state.options);
       donors[label] = { ...donor, input, resolution, packageName: profile.name, license: profile.license, gate };
-      log.info(`${label}: ${donor.name} @ ${donor.commit?.slice(0, 10) ?? "local"} — license ${profile.license.spdx ?? "unknown"} ${gate.ok ? "✓" : "✗"}`);
+      const display = resolution ? input : donor.name;
+      donors[label].display = display;
+      log.info(`${label}: ${display} ${gate.ok ? "✓" : "✗"}${resolution ? ` (studied through ${resolution.repo}, ${profile.license.spdx ?? "license unknown"})` : ` @ ${donor.commit?.slice(0, 10) ?? "local"}, ${profile.license.spdx ?? "license unknown"}`}`);
     }
     state.donors = donors;
     await save();
@@ -82,7 +84,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   // 2. Dissect: REA evidence + spec card per donor.
   const specs = {};
   for (const label of ["A", "B"]) {
-    log.step(`Dissecting donor ${label} (${state.donors[label].name})`);
+    log.step(`Dissecting donor ${label} (${state.donors[label].display ?? state.donors[label].name})`);
     const profile = await readJson(join(runDir, "donors", `${label}.profile.json`));
     const summaryPath = join(runDir, "evidence", `${label}.rea-summary.json`);
     let reaSummary = null;
@@ -207,7 +209,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
 async function resolveDonor(brain, label, input, { allowCopyleft = false } = {}) {
   const target = classifyTarget(input);
   if (target.kind !== "name" && target.kind !== "website") return null;
-  log.info(`${label}: "${input}" is ${target.kind === "name" ? "a name" : "a website"} — searching for an open-source twin…`);
+  log.info(`${label}: locating ${input}…`);
   const answer = await brain.ask({
     stage: `resolve-${label}`,
     system: SYSTEM,
@@ -218,15 +220,12 @@ async function resolveDonor(brain, label, input, { allowCopyleft = false } = {})
     const repo = candidate.repo.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").trim();
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
     if (!allowCopyleft && /\b(A?GPL|LGPL|MPL|EUPL|SSPL|CC-BY-SA)/i.test(candidate.license)) {
-      log.info(`${label}: skipping ${repo} (${candidate.license} is copyleft)`);
       continue;
     }
     const repoUrl = `https://github.com/${repo}.git`;
     if (await repositoryExists(repoUrl)) {
-      log.info(`${label}: twin found → ${repo} (${candidate.why})`);
       return { tier: "twin", from: input, product: answer.product, essence: answer.essence, repo, repoUrl, why: candidate.why };
     }
-    log.warn(`${label}: ${repo} does not exist, trying the next twin`);
   }
   throw new Error(`No open-source twin found for "${input}". Try a repository URL instead.`);
 }
