@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ratewise</title>
+  <style>
+    :root { --a: #ff4f00; --b: #2340ff; --ink: #15151a; --mute: #6b6b76; --line: #e6e4ee; --bg: #f7f6fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+    main { max-width: 720px; margin: 0 auto; padding: 28px 18px 40px; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; }
+    h1 span { background: linear-gradient(90deg, var(--a), var(--b)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede { margin: 6px 0 22px; color: var(--mute); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: 0 6px 24px -18px rgba(20, 20, 40, .35); }
+    .card h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--mute); }
+    label { display: block; font-size: 12px; color: var(--mute); margin: 10px 0 4px; }
+    input { width: 100%; padding: 10px 12px; font: inherit; border: 1px solid var(--line); border-radius: 10px; background: #fbfbfd; }
+    input:focus { outline: none; border-color: var(--b); box-shadow: 0 0 0 3px rgba(35, 64, 255, .12); }
+    .result { margin-top: 14px; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, rgba(255, 79, 0, .08), rgba(35, 64, 255, .08)); }
+    .big { font-size: 30px; font-weight: 750; letter-spacing: -.02em; }
+    .small { color: var(--mute); font-size: 13px; }
+    .err { color: #c0262d; font-weight: 600; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chips button { font: inherit; font-size: 12px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+    .chips button:hover { border-color: var(--a); color: var(--a); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><span>ratewise</span></h1>
+    <p class="lede">Human-readable transfer rates, ETAs and data budgets. Born from <b>ms</b> (durations) × <b>pretty-bytes</b> (sizes).</p>
+    <div class="grid">
+      <section class="card">
+        <h2>How long will it take?</h2>
+        <label for="size">File size</label>
+        <input id="size" value="3 GB">
+        <label for="rate">Speed</label>
+        <input id="rate" value="25 MB/s">
+        <div class="chips" data-target="rate"><button>100 Mbit/s</button><button>2 MB/s</button><button>1 GB/min</button></div>
+        <div class="result" id="eta-out"></div>
+      </section>
+      <section class="card">
+        <h2>How much fits in a window?</h2>
+        <label for="brate">Speed</label>
+        <input id="brate" value="100 Mbit/s">
+        <label for="window">Time</label>
+        <input id="window" value="1h">
+        <div class="chips" data-target="window"><button>10m</button><button>1d</button><button>1w</button></div>
+        <div class="result" id="budget-out"></div>
+      </section>
+      <section class="card">
+        <h2>Rate converter</h2>
+        <label for="conv">Any rate</label>
+        <input id="conv" value="20 GB/day">
+        <div class="result" id="conv-out"></div>
+      </section>
+    </div>
+  </main>
+  <script type="module">
+    import { eta, budget, parseRate, formatRate, formatSize } from "../src/index.mjs";
+    const $ = (id) => document.getElementById(id);
+    const safe = (fn) => { try { return fn(); } catch (error) { return `<span class="err">${error.message}</span>`; } };
+
+    function update() {
+      $("eta-out").innerHTML = safe(() => `<div class="big">${eta($("size").value, $("rate").value, { long: true })}</div><div class="small">short form: ${eta($("size").value, $("rate").value)}</div>`);
+      $("budget-out").innerHTML = safe(() => `<div class="big">${formatSize(budget($("brate").value, $("window").value))}</div><div class="small">${formatSize(budget($("brate").value, $("window").value), { binary: true })} in binary units</div>`);
+      $("conv-out").innerHTML = safe(() => {
+        const bps = parseRate($("conv").value);
+        if (Number.isNaN(bps)) throw new Error("Try something like 20 GB/day or 100 Mbit/s");
+        return ["s", "m", "h", "d"].map((per) => `<div><b>${formatRate(bps, { per })}</b></div>`).join("") + `<div class="small">${formatRate(bps, { bits: true })} in bits</div>`;
+      });
+    }
+    for (const input of document.querySelectorAll("input")) input.addEventListener("input", update);
+    for (const chips of document.querySelectorAll(".chips")) {
+      chips.addEventListener("click", (event) => {
+        if (event.target.tagName !== "BUTTON") return;
+        $(chips.dataset.target).value = event.target.textContent;
+        update();
+      });
+    }
+    update();
+  </script>
+</body>
+</html>

@@ -8,11 +8,12 @@ import { createServer } from "node:http";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { autoProvider, findClaudeCli } from "../src/brain.mjs";
+import { autoProvider, claudeCooldown, findClaudeCli } from "../src/brain.mjs";
 import { classifyTarget } from "../src/acquire.mjs";
 import { createRun, REAFUSE_VERSION } from "../src/pipeline.mjs";
 import { reaVersion } from "../src/rea.mjs";
 import { exists, readJson, run as runCommand, safeJoin, writeJson } from "../src/util.mjs";
+import { zip } from "./zip.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC = join(ROOT, "web", "public");
@@ -158,7 +159,22 @@ async function runView(found) {
   const specB = await readJsonSafe(join(found.brainDir, "spec-B.response.json"));
   const live = found.showcase ? null : await readJsonSafe(join(found.dir, "live.json"));
   const creatureDir = found.showcase ? found.creatureDir : report?.creature?.dir ? join(found.dir, report.creature.dir) : null;
+  const pick = state?.pick ?? null;
+  const evidenceDir = found.showcase ? found.brainDir : join(found.dir, "evidence");
+  const reaModules = {};
+  for (const label of ["A", "B"]) {
+    const summary = await readJsonSafe(join(evidenceDir, `${label}.rea-summary.json`));
+    if (summary) reaModules[label] = summary.modules?.length ?? null;
+  }
+  const contract = pick ? await readJsonSafe(join(found.brainDir, `contract-p${pick}.response.json`)) : null;
+  const grown = pick ? await readJsonSafe(join(found.brainDir, `grow-p${pick}.response.json`)) : null;
   return {
+    startedAt: state?.createdAt ?? report?.createdAt ?? null,
+    reaModules,
+    contractTests: contract?.mapping?.length ?? null,
+    grownFiles: grown?.files?.length ?? null,
+    preview: creatureDir ? await exists(join(creatureDir, "demo", "index.html")) : false,
+    creatureName: report?.creature?.name ?? null,
     id: found.id,
     showcase: found.showcase,
     inputs: state?.inputs ?? (report ? { A: report.donors.A.input, B: report.donors.B.input } : null),
@@ -199,7 +215,11 @@ async function claudeStatus() {
   if (!bin) return { ready: false, detail: "claude-cli not installed" };
   const probe = await runCommand(bin, ["auth", "status"], { timeoutMs: 30_000 });
   try {
-    return JSON.parse(probe.stdout).loggedIn ? { ready: true, detail: "claude-cli" } : { ready: false, detail: "claude-cli logged out" };
+    if (!JSON.parse(probe.stdout).loggedIn) return { ready: false, detail: "claude-cli logged out" };
+    const cooling = await claudeCooldown(LAB);
+    return cooling
+      ? { ready: false, detail: `claude-cli at capacity until ${new Date(cooling.until).toISOString().slice(11, 16)} UTC, Kilo covering` }
+      : { ready: true, detail: "claude-cli" };
   } catch {
     return { ready: false, detail: "claude-cli auth status unavailable" };
   }
@@ -217,6 +237,7 @@ async function brainStatus() {
   const parts = [];
   if (provider === "claude-cli" || provider === "hybrid") parts.push(await claudeStatus());
   if (provider === "kilo" || provider === "hybrid") parts.push(kiloStatus());
+  if (provider === "free" || provider === "hybrid") parts.push({ ready: true, detail: "free backups: llm7 · pollinations" });
   if (provider === "anthropic") parts.push({ ready: true, detail: "anthropic api" });
   if (provider === "handoff") parts.push({ ready: false, detail: "handoff brain needs an operator" });
   // Hybrid stays open while either half works: each stage falls back to the other.
@@ -304,6 +325,23 @@ async function api(req, res, url) {
     return send(res, 200, { path: rel, content });
   }
 
+  if (req.method === "GET" && parts[2] === "zip") {
+    const view = await runView(found);
+    if (!view.files.length) return send(res, 404, { error: "This experiment has no creature to download." });
+    const base = found.showcase ? found.creatureDir : join(found.dir, view.report.creature.dir);
+    const name = (view.creatureName ?? "creature").replace(/[^\w.-]/g, "-");
+    const files = [];
+    for (const rel of view.files) files.push({ path: `${name}/${rel}`, data: await readFile(safeJoin(base, rel)) });
+    const body = zip(files);
+    res.writeHead(200, {
+      "content-type": "application/zip",
+      "content-disposition": `attachment; filename="${name}.zip"`,
+      "content-length": body.length,
+      "cache-control": "no-store",
+    });
+    return res.end(body);
+  }
+
   if (req.method === "GET" && parts[2] === "stream") return stream(req, res, found);
 
   return send(res, 404, { error: "Unknown endpoint." });
@@ -364,6 +402,55 @@ async function stream(req, res, found) {
   }
 }
 
+/**
+ * Serves a creature's files for its live preview. The page runs in a
+ * sandboxed iframe (opaque origin, no access to the lab) and its CSP blocks
+ * all network access, so a generated demo can only use its own files.
+ */
+async function servePreview(req, res, url) {
+  const [, , rawId, ...rest] = url.pathname.split("/");
+  const found = await locate(decodeURIComponent(rawId ?? ""));
+  if (!found) return send(res, 404, "Not found");
+  const view = await runView(found);
+  const rel = decodeURIComponent(rest.join("/") || "demo/index.html");
+  if (!view.files.includes(rel)) return send(res, 404, "Not found");
+  const base = found.showcase ? found.creatureDir : join(found.dir, view.report.creature.dir);
+  const type = { ".mjs": "text/javascript; charset=utf-8", ".json": "application/json" }[extname(rel)] ?? TYPES[extname(rel)] ?? "text/plain; charset=utf-8";
+  res.writeHead(200, {
+    "content-type": type,
+    "cache-control": "no-cache",
+    "access-control-allow-origin": "*",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'",
+    "x-content-type-options": "nosniff",
+  });
+  createReadStream(safeJoin(base, rel)).pipe(res);
+}
+
+const attr = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+/** Puts per-run titles in the page head so shared links preview nicely. */
+async function shareMeta(pathname) {
+  const match = pathname.match(/^\/run\/([^/]+)$/);
+  if (!match) return null;
+  const found = await locate(decodeURIComponent(match[1]));
+  if (!found) return null;
+  const report = await readJsonSafe(join(found.dir, "report.json"));
+  const state = found.showcase ? null : await readJsonSafe(join(found.dir, "run.json"));
+  const inputs = state?.inputs ?? (report ? { A: report.donors.A.display ?? report.donors.A.name, B: report.donors.B.display ?? report.donors.B.name } : null);
+  if (!inputs) return null;
+  const pair = `${inputs.A} × ${inputs.B}`;
+  const title = report?.creature ? `${pair} → ${report.creature.name} · ${report.verdict.status}` : `${pair} · fusing now`;
+  const description = report?.creature?.tagline ?? "Two apps in, one new thing out. Watch ReaFuse dissect, fuse and grow it live.";
+  return `<title>${attr(title)} · ReaFuse</title>
+  <meta property="og:title" content="${attr(title)}">
+  <meta property="og:description" content="${attr(description)}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ReaFuse">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="${attr(title)}">
+  <meta name="twitter:description" content="${attr(description)}">`;
+}
+
 async function serveStatic(req, res, url) {
   const rel = url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname.slice(1));
   let file;
@@ -375,6 +462,13 @@ async function serveStatic(req, res, url) {
   if (!(await exists(file)) || !(await stat(file)).isFile()) {
     file = join(PUBLIC, "index.html"); // single-page app fallback
   }
+  if (file.endsWith("index.html")) {
+    let html = await readFile(file, "utf8");
+    const meta = await shareMeta(url.pathname).catch(() => null);
+    if (meta) html = html.replace(/<title>[^<]*<\/title>/, meta);
+    res.writeHead(200, { "content-type": TYPES[".html"], "cache-control": "no-cache" });
+    return res.end(html);
+  }
   res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream", "cache-control": "no-cache" });
   createReadStream(file).pipe(res);
 }
@@ -383,6 +477,7 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://lab");
   try {
     if (url.pathname.startsWith("/api/")) await api(req, res, url);
+    else if (url.pathname.startsWith("/preview/") && req.method === "GET") await servePreview(req, res, url);
     else if (req.method === "GET") await serveStatic(req, res, url);
     else send(res, 405, "Method not allowed");
   } catch (error) {

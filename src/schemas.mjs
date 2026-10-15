@@ -87,3 +87,19 @@ export const Resolution = z.object({
     )
     .describe("3-5 real, public GitHub repositories, best first. Prefer JavaScript/TypeScript, permissive licenses, and small focused codebases over huge monorepos."),
 });
+
+export const Preview = z.object({
+  html: z.string().describe("The complete demo/index.html file."),
+  summary: z.string().describe("What the demo lets people try, in one sentence."),
+});
+
+export const GrowPlan = z.object({
+  files: z
+    .array(z.object({ path: z.string(), purpose: z.string().describe("What the file contains: its exports, functions and imports.") }))
+    .describe("Every file of the creature, in dependency order: src modules first, then bin, own tests, README.md, package.json."),
+  summary: z.string(),
+});
+
+export const FileBody = z.object({
+  content: z.string().describe("The complete content of the requested file."),
+});

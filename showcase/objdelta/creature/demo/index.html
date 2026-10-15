@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>objdelta</title>
+  <style>
+    :root { --a: #ff4f00; --b: #2340ff; --ink: #15151a; --mute: #6b6b76; --line: #e6e4ee; --bg: #f7f6fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+    main { max-width: 860px; margin: 0 auto; padding: 28px 18px 40px; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; }
+    h1 span { background: linear-gradient(90deg, var(--a), var(--b)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede { margin: 6px 0 22px; color: var(--mute); }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 6px 24px -18px rgba(20, 20, 40, .35); }
+    .card h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--mute); }
+    .before h2 { color: var(--a); } .after h2 { color: var(--b); }
+    textarea { width: 100%; min-height: 190px; padding: 10px; font: 13px/1.5 ui-monospace, Menlo, Consolas, monospace; border: 1px solid var(--line); border-radius: 10px; background: #fbfbfd; resize: vertical; }
+    textarea:focus { outline: none; border-color: var(--b); }
+    .changes { margin-top: 14px; }
+    .line { font: 14px ui-monospace, Menlo, Consolas, monospace; padding: 6px 10px; border-radius: 8px; margin: 4px 0; }
+    .add { background: #e8f7ee; color: #116b3a; } .remove { background: #fdecec; color: #a5222a; } .replace { background: #eef0ff; color: #2340ff; }
+    .ok { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(255, 79, 0, .08), rgba(35, 64, 255, .08)); font-size: 14px; }
+    .err { color: #c0262d; font-weight: 600; }
+    @media (max-width: 600px) { .pair { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><span>objdelta</span></h1>
+    <p class="lede">See exactly what changed between two JSON values, then replay it as an immutable patch. Born from <b>dequal</b> (deep equality) × <b>klona</b> (deep cloning).</p>
+    <div class="pair">
+      <section class="card before"><h2>Before</h2><textarea id="before" spellcheck="false"></textarea></section>
+      <section class="card after"><h2>After</h2><textarea id="after" spellcheck="false"></textarea></section>
+    </div>
+    <section class="card changes">
+      <h2>Changes</h2>
+      <div id="out"></div>
+      <div class="ok" id="check"></div>
+    </section>
+  </main>
+  <script type="module">
+    import { diff, patch, summarize, equal } from "../src/index.mjs";
+    const before = document.getElementById("before");
+    const after = document.getElementById("after");
+    before.value = JSON.stringify({ user: { name: "Ada", plan: "free" }, tags: ["math"], legacy: true }, null, 2);
+    after.value = JSON.stringify({ user: { name: "Ada", plan: "pro" }, tags: ["math", "poetry"], seats: 3 }, null, 2);
+
+    function update() {
+      const out = document.getElementById("out");
+      const check = document.getElementById("check");
+      try {
+        const a = JSON.parse(before.value);
+        const b = JSON.parse(after.value);
+        const ops = diff(a, b);
+        const lines = summarize(ops);
+        out.innerHTML = lines.length
+          ? lines.map((line, i) => `<div class="line ${ops[i].op}">${line}${"value" in ops[i] ? ` → ${JSON.stringify(ops[i].value)}` : ""}</div>`).join("")
+          : `<div class="line">No differences.</div>`;
+        const rebuilt = patch(a, ops);
+        check.textContent = equal(rebuilt, b)
+          ? `✓ patch(before, diff(before, after)) rebuilds "after" exactly, and "before" was not modified (${ops.length} operation${ops.length === 1 ? "" : "s"}).`
+          : "✗ Round trip mismatch.";
+      } catch (error) {
+        out.innerHTML = `<div class="err">${error.message}</div>`;
+        check.textContent = "Fix the JSON to see the changes.";
+      }
+    }
+    before.addEventListener("input", update);
+    after.addEventListener("input", update);
+    update();
+  </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { appendFileSync } from "node:fs";
 import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import { dirname, isAbsolute, normalize, relative, resolve, sep } from "node:path";
 import { spawn } from "node:child_process";
@@ -114,13 +115,25 @@ export function run(command, args, { cwd, timeoutMs = 120_000, env, input, maxBy
 
 export const log = {
   quiet: false,
+  /** Optional file that receives a copy of every line (a run's live.log). */
+  tee: null,
+  write(line) {
+    if (!this.quiet) process.stderr.write(line);
+    if (this.tee) {
+      try {
+        appendFileSync(this.tee, line);
+      } catch {
+        // the lab tape is best effort
+      }
+    }
+  },
   step(text) {
-    if (!this.quiet) process.stderr.write(`\n🧪 ${text}\n`);
+    this.write(`\n🧪 ${text}\n`);
   },
   info(text) {
-    if (!this.quiet) process.stderr.write(`   ${text}\n`);
+    this.write(`   ${text}\n`);
   },
   warn(text) {
-    if (!this.quiet) process.stderr.write(`   ⚠ ${text}\n`);
+    this.write(`   ⚠ ${text}\n`);
   },
 };

@@ -8,7 +8,7 @@ const PERMISSIVE = /^(MIT|ISC|0BSD|BSD-2-Clause|BSD-3-Clause|Apache-2\.0|Unlicen
 const JS_LIKE = /^(TypeScript|JavaScript|Vue|Svelte|Astro)$/i;
 // Words that suggest a project recreates the product vs. one that merely talks to it.
 const APP_LIKE = /\b(clone|alternative|replica|redesign|recreat\w*|inspired|ui|client|player|app|messenger|chat|feed|social)\b/;
-const UTILITY = /\b(dl|download\w*|api|sdk|wrapper|bot|scraper|cli|plugin|extension|theme|spicetify|stats|lyrics|exporter|converter)\b|-dl\b/;
+const UTILITY = /\b(dl|download\w*|api|sdk|wrapper|bot|scraper|cli|plugin|extension|theme|spicetify|stats|lyrics|exporter|converter|module|widget|integration|magicmirror|homebridge|home assistant|raycast|alfred|obsidian|vscode|webhook|uploader|backup|importer|sync)\b|-dl\b|^mmm[- ]/;
 const STOP = new Set(["the", "app", "web", "inc", "www", "com", "io", "org", "net", "co"]);
 
 /** "instagram.com" → "instagram", "Google Maps" → "google maps". */

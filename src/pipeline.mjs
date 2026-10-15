@@ -4,15 +4,16 @@ import { basename, join, relative, sep } from "node:path";
 import { createInterface } from "node:readline/promises";
 
 import { acquireTarget, classifyTarget, repositoryExists } from "./acquire.mjs";
+import { donorCacheDir, pinnedTwin, readDonorCache, writeDonorCache } from "./donor-cache.mjs";
 import { findTwins } from "./twins.mjs";
-import { createBrain } from "./brain.mjs";
+import { createBrain, HandoffPending } from "./brain.mjs";
 import { licenseGate } from "./license.mjs";
 import { checkOriginality } from "./originality.mjs";
 import { listSourceFiles, profileDonor } from "./profile.mjs";
-import { contractPrompt, fusePrompt, growPrompt, repairPrompt, resolvePrompt, specPrompt, SYSTEM } from "./prompts.mjs";
+import { contractPrompt, fusePrompt, growFilePrompt, growPlanPrompt, growPrompt, previewPrompt, repairPrompt, resolvePrompt, specPrompt, SYSTEM } from "./prompts.mjs";
 import { analyzeWithRea, reaVersion, summarizeReaEvidence } from "./rea.mjs";
 import { writeReport } from "./report.mjs";
-import { Contract, CreatureFiles, FusionProposals, Resolution, SpecCard } from "./schemas.mjs";
+import { Contract, CreatureFiles, FileBody, FusionProposals, GrowPlan, Preview, Resolution, SpecCard } from "./schemas.mjs";
 import { exists, log, newRunId, readJson, safeJoin, slugify, truncate, writeJson, writeText } from "./util.mjs";
 import { verdictFor, verifyCreature } from "./verify.mjs";
 
@@ -110,21 +111,37 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
     log.step(`Dissecting donor ${label} (${state.donors[label].display ?? state.donors[label].name})`);
     const profile = await readJson(join(runDir, "donors", `${label}.profile.json`));
     const summaryPath = join(runDir, "evidence", `${label}.rea-summary.json`);
+    const cacheDir = donorCacheDir(labDir, state.donors[label]);
     let reaSummary = null;
     if (await exists(summaryPath)) {
       reaSummary = await readJson(summaryPath);
     } else if (!state.options.noRea) {
-      log.info("REA static analysis…");
-      const rea = await analyzeWithRea(state.donors[label].path);
-      if (rea.ok) {
-        await writeJson(join(runDir, "evidence", `${label}.rea.json`), rea.evidence);
-        reaSummary = { command: rea.command, ...summarizeReaEvidence(rea.evidence) };
-        log.info(`REA evidence ${reaSummary.evidenceId?.slice(0, 18)}… (${reaSummary.modules.length} modules)`);
+      const cached = await readDonorCache(cacheDir, "rea-summary.json");
+      if (cached) {
+        reaSummary = cached;
+        log.info(`REA evidence ${reaSummary.evidenceId?.slice(0, 18) ?? ""}… (${reaSummary.modules?.length ?? 0} modules, cached)`);
       } else {
-        reaSummary = { command: rea.command, unavailable: rea.error };
-        log.warn(`REA unavailable: ${rea.error}`);
+        log.info("REA static analysis…");
+        const rea = await analyzeWithRea(state.donors[label].path);
+        if (rea.ok) {
+          await writeJson(join(runDir, "evidence", `${label}.rea.json`), rea.evidence);
+          reaSummary = { command: rea.command, ...summarizeReaEvidence(rea.evidence) };
+          log.info(`REA evidence ${reaSummary.evidenceId?.slice(0, 18)}… (${reaSummary.modules.length} modules)`);
+          await writeDonorCache(cacheDir, "rea-summary.json", reaSummary);
+        } else {
+          reaSummary = { command: rea.command, unavailable: rea.error };
+          log.warn(`REA unavailable: ${rea.error}`);
+        }
       }
       await writeJson(summaryPath, reaSummary);
+    }
+    // A spec card written for this donor commit by any earlier run is reused.
+    const specResponse = join(runDir, "brain", `spec-${label}.response.json`);
+    const cachedSpec = (await exists(specResponse)) ? null : await readDonorCache(cacheDir, "spec.json");
+    if (cachedSpec) {
+      await writeJson(specResponse, cachedSpec);
+      await writeJson(join(runDir, "brain", `spec-${label}.meta.json`), { provider: "cache", cachedFrom: cacheDir, answeredAt: new Date().toISOString() });
+      log.info("🧠 spec card loaded from the donor cache");
     }
     specs[label] = await brain.ask({
       stage: `spec-${label}`,
@@ -132,6 +149,7 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
       prompt: specPrompt(label, profile, reaSummary?.unavailable ? null : reaSummary),
       schema: SpecCard,
     });
+    if (!cachedSpec) await writeDonorCache(cacheDir, "spec.json", specs[label]);
     log.info(`Spec card: ${specs[label].capabilities.length} capabilities — ${specs[label].oneLiner}`);
   }
 
@@ -174,7 +192,11 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
 
   // 5. Grow the creature from scratch, then install the lab-owned contract.
   log.step(`Growing ${proposal.name}`);
-  const grown = await brain.ask({ stage: `grow-${tag}`, system: SYSTEM, prompt: growPrompt(proposal, { tests: contractFiles }), schema: CreatureFiles });
+  // Free routers fail on one huge answer, so they grow the creature file by file.
+  const partsMode = ["kilo", "free", "llm7", "pollinations"].includes(brain.provider) || process.env.REAFUSE_GROW_MODE === "parts";
+  const grown = partsMode && !(await exists(join(runDir, "brain", `grow-${tag}.response.json`)))
+    ? await growInParts(brain, runDir, tag, proposal, { tests: contractFiles })
+    : await brain.ask({ stage: `grow-${tag}`, system: SYSTEM, prompt: growPrompt(proposal, { tests: contractFiles }), schema: CreatureFiles });
   await rm(creatureDir, { recursive: true, force: true });
   await writeCreatureFiles(creatureDir, grown.files);
   await writeCreatureFiles(creatureDir, contractFiles, { allowContract: true });
@@ -212,6 +234,34 @@ export async function advanceRun(runDir, { labDir, brainProvider, model, interac
   log.info(`overlap ${(originality.overlap * 100).toFixed(1)}%, longest shared run ${originality.longestCopiedTokens} tokens → ${originality.passed ? "original" : "BREACH"}`);
 
   const status = originality.passed ? verdictFor(results) : "REJECTED";
+
+  // 8. Preview: a small page that lets people try the creature right away.
+  if (status === "ALIVE" || status === "UNSTABLE") {
+    log.step("Building the live preview");
+    try {
+      const preview = await brain.ask({
+        stage: `preview-${tag}`,
+        system: SYSTEM,
+        prompt: previewPrompt(
+          proposal,
+          (await readCreatureFiles(creatureDir)).filter((file) => file.path.startsWith("src/") || file.path === "README.md"),
+          { A: { name: state.donors.A.display ?? state.donors.A.name, spec: specs.A }, B: { name: state.donors.B.display ?? state.donors.B.name, spec: specs.B } },
+        ),
+        schema: Preview,
+      });
+      const html = preview.html;
+      if (!html.includes("../src/index.mjs") || /(src|href)\s*=\s*["']https?:/i.test(html)) {
+        log.warn("Preview skipped: the page must import ../src/index.mjs and load nothing from the network.");
+      } else {
+        await writeText(join(creatureDir, "demo", "index.html"), html);
+        log.info(`Preview ready: ${preview.summary}`);
+      }
+    } catch (error) {
+      if (error instanceof HandoffPending) throw error;
+      log.warn(`Preview skipped:${String(error.message).split("\n")[0].slice(0, 160)}`);
+    }
+  }
+
   state.phase = "done";
   state.verdict = {
     status,
@@ -233,6 +283,12 @@ async function resolveCandidates(brain, label, input, { allowCopyleft = false, s
   const target = classifyTarget(input);
   if (target.kind !== "name" && target.kind !== "website") return null;
   log.info(`${label}: locating ${input}…`);
+
+  // Fastest path: an app warmed with `reafuse warm` has a pinned build.
+  const pinned = labDir ? await pinnedTwin(labDir, input) : null;
+  if (pinned) {
+    return [{ tier: "twin", source: "pinned", from: input, product: input, repo: pinned.repo, repoUrl: pinned.repoUrl, why: pinned.why ?? "" }];
+  }
 
   // Fast path: GitHub search ranked by similarity, relevance and REA compatibility.
   try {
@@ -277,6 +333,31 @@ async function resolveCandidates(brain, label, input, { allowCopyleft = false, s
   }
   if (!found.length) throw new Error(`Could not find a usable open-source build to study for "${input}". Try a repository URL instead.`);
   return found;
+}
+
+/**
+ * Grows the creature as a plan plus one small answer per file. Each part is
+ * cached like any brain stage, and the assembled result is stored as the
+ * normal grow answer so resumes and reports work unchanged.
+ */
+async function growInParts(brain, runDir, tag, proposal, contract) {
+  const plan = await brain.ask({ stage: `grow-${tag}-plan`, system: SYSTEM, prompt: growPlanPrompt(proposal, contract), schema: GrowPlan });
+  const targets = plan.files.filter((file) => !file.path.replace(/\\/g, "/").replace(/^\.\//, "").startsWith("test/contract/")).slice(0, 12);
+  log.info(`Plan: ${targets.length} files (${targets.map((file) => file.path).join(", ")})`);
+  const files = [];
+  for (const [index, target] of targets.entries()) {
+    const { content } = await brain.ask({
+      stage: `grow-${tag}-f${index + 1}`,
+      system: SYSTEM,
+      prompt: growFilePrompt(proposal, contract, plan, target.path, files),
+      schema: FileBody,
+    });
+    files.push({ path: target.path, content });
+    log.info(`✎ ${target.path} (${content.length} chars)`);
+  }
+  const grown = { files, summary: plan.summary };
+  await writeJson(join(runDir, "brain", `grow-${tag}.response.json`), grown);
+  return grown;
 }
 
 async function finish(runDir, state, details = {}) {

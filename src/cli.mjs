@@ -19,6 +19,7 @@ Usage
   reafuse dissect <donor> [--no-rea]         Profile one donor (no brain needed)
   reafuse runs                               List runs in this lab
   reafuse mcp                                Run as an MCP server (your agent is the brain)
+  reafuse warm <apps…> [--famous]            Pre-cache app names for instant intake and dissection
   reafuse doctor                             Check REA, git and brain availability
 
 Donors
@@ -59,6 +60,8 @@ export async function main(argv) {
       "strict-license": { type: "boolean", default: false },
       "no-local": { type: "boolean", default: false },
       json: { type: "boolean", default: false },
+      famous: { type: "boolean", default: false },
+      "live-log": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
   });
@@ -81,6 +84,11 @@ export async function main(argv) {
       strictLicense: values["strict-license"],
       maxRepairs: values["max-repairs"] ? Number(values["max-repairs"]) : 2,
     });
+    if (values["live-log"]) {
+      log.tee = join(runDir, "live.log");
+      log.write(`⚡ Subjects received: [A] ${rest[0]}  ×  [B] ${rest[1]}
+`);
+    }
     log.info(`Run: ${runDir}`);
     return advance(runDir, labDir, values);
   }
@@ -89,6 +97,10 @@ export async function main(argv) {
     if (!rest[0]) throw new Error("resume needs a run id or run directory.");
     const runDir = (await exists(join(rest[0], "run.json"))) ? resolve(rest[0]) : join(labDir, "runs", rest[0]);
     if (!(await exists(join(runDir, "run.json")))) throw new Error(`Run not found: ${rest[0]}`);
+    if (values["live-log"]) {
+      log.tee = join(runDir, "live.log");
+      log.write(`\n▶ ${new Date().toISOString()} resuming\n`);
+    }
     if (values.pick) {
       const { readJson, writeJson } = await import("./util.mjs");
       const state = await readJson(join(runDir, "run.json"));
@@ -119,6 +131,19 @@ export async function main(argv) {
     }
     console.log(JSON.stringify(output, null, 2));
     return 0;
+  }
+
+  if (command === "warm") {
+    const { FAMOUS_APPS } = await import("./donor-cache.mjs");
+    const { warmApps } = await import("./warm.mjs");
+    const names = values.famous ? [...FAMOUS_APPS, ...rest] : rest;
+    if (!names.length) throw new Error("warm needs app names, or --famous for the built-in list.");
+    const results = await warmApps(names, { labDir, brainProvider: values.brain ?? process.env.REAFUSE_BRAIN, model: values.model });
+    const ok = results.filter((result) => result.ok).length;
+    process.stderr.write(`
+🔥 Warmed ${ok}/${results.length} apps${ok < results.length ? ` (failed: ${results.filter((r) => !r.ok).map((r) => r.name).join(", ")})` : ""}
+`);
+    return ok === results.length ? 0 : 1;
   }
 
   if (command === "mcp") {
@@ -195,20 +220,20 @@ async function advance(runDir, labDir, values) {
       awaitPick: values["await-pick"],
     });
     if (!report) {
-      process.stderr.write(`
+      log.write(`
 🧬 Three creatures proposed. Pick one with: reafuse resume "${runDir}" --pick <n>
 `);
       return 4;
     }
     const status = report.verdict.status;
-    process.stderr.write(`\n══════════════════════════════════════\n  ${status}${report.creature ? ` — ${report.creature.name}` : ""}\n══════════════════════════════════════\n`);
-    if (report.verdict.reason) process.stderr.write(`  ${report.verdict.reason}\n`);
-    process.stderr.write(`  Report: ${join(runDir, "REPORT.md")}\n`);
-    if (report.creature?.dir) process.stderr.write(`  Creature: ${join(runDir, report.creature.dir)}\n`);
+    log.write(`\n══════════════════════════════════════\n  ${status}${report.creature ? ` — ${report.creature.name}` : ""}\n══════════════════════════════════════\n`);
+    if (report.verdict.reason) log.write(`  ${report.verdict.reason}\n`);
+    log.write(`  Report: ${join(runDir, "REPORT.md")}\n`);
+    if (report.creature?.dir) log.write(`  Creature: ${join(runDir, report.creature.dir)}\n`);
     return status === "ALIVE" ? 0 : 1;
   } catch (error) {
     if (error instanceof HandoffPending) {
-      process.stderr.write(
+      log.write(
         `\n🤝 Brain handoff: stage "${error.stage}" needs an answer.\n   Prompt:   ${error.promptPath}\n   Answer →  ${error.responsePath}\n   Then run: reafuse resume "${runDir}"\n`,
       );
       return 3;

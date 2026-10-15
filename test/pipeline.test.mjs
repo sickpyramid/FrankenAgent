@@ -71,6 +71,10 @@ async function seededRun(growFiles) {
     fuse: { proposals: [proposal, proposal, proposal] },
     "contract-p1": contract,
     "grow-p1": { files: growFiles, summary: "test" },
+    "preview-p1": {
+      html: '<!doctype html><script type="module">import { mix } from "../src/index.mjs"; document.body.textContent = mix(0, 10, 0.5);</script>',
+      summary: "mix demo",
+    },
   };
   for (const [stage, value] of Object.entries(answers)) await writeJson(join(runDir, "brain", `${stage}.response.json`), value);
   return { lab, runDir };
@@ -87,6 +91,8 @@ test("a well-grown creature is ALIVE and gets a hashed lab report", async () => 
   assert.equal(report.verification.contract.passed, 2);
   assert.match(report.certificate, /^[0-9a-f]{64}$/);
   const lineage = await readFile(join(runDir, report.creature.dir, "LINEAGE.md"), "utf8");
+  const demo = await readFile(join(runDir, report.creature.dir, "demo", "index.html"), "utf8");
+  assert.match(demo, /\.\.\/src\/index\.mjs/);
   assert.match(lineage, /IT'S ALIVE/);
   await rm(lab, { recursive: true, force: true });
 });
