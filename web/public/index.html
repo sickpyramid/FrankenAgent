@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=1792051284">
 </head>
 <body>
   <header class="bar">
@@ -35,10 +35,35 @@
     <!-- HOME ─────────────────────────────────────────────── -->
     <section id="home" class="view">
       <div class="hero">
-        <p class="kicker">Built on <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA: Reverse Engineer Anything</a></p>
-        <h1>Two apps in.<br><span class="hl">One new thing</span> out.</h1>
-        <p class="lede">Wire any two repos, links or app names into the fuse. ReaFuse reverse engineers both with REA, fuses their capabilities, writes fresh code and tests it until it holds current, or blows.</p>
+        <div class="hero-copy">
+          <p class="kicker">Built on <a href="https://github.com/morluto/rea" target="_blank" rel="noopener">REA: Reverse Engineer Anything</a></p>
+          <h1>Two apps in.<br><span class="hl">One new thing</span> out.</h1>
+          <p class="lede">Wire any two repos, links or app names into the fuse. ReaFuse reverse engineers both with REA, fuses their capabilities, writes fresh code and tests it until it holds current, or blows.</p>
+          <ul class="facts">
+            <li><b id="fact-alive">—</b><span>creatures alive</span></li>
+            <li><b>0</b><span>runtime deps</span></li>
+            <li><b>1st</b><span>tests before code</span></li>
+          </ul>
+          <div class="cta">
+            <a class="btn primary" href="#fuse-form" id="cta-fuse">Fuse two apps ↓</a>
+            <a class="btn" href="#use" data-tab="agents">For AI agents →</a>
+          </div>
+        </div>
+
+        <figure class="chamber" id="chamber">
+          <canvas aria-hidden="true"></canvas>
+          <figcaption class="cx-cap">
+            <ol class="cx-stages" aria-hidden="true"><li>RSLV</li><li>INTK</li><li>DSCT</li><li>FUSE</li><li>CTRC</li><li>GROW</li><li>VRFY</li><li>ORIG</li></ol>
+            <div class="cx-row">
+              <p class="cx-pair"><b class="ta">—</b><i>×</i><b class="tb">—</b><i>→</i><b class="tc">—</b></p>
+              <a class="cx-open" href="#gallery">Open this run ↗</a>
+            </div>
+            <p class="cx-tag">Replaying real fusions from the parts catalog.</p>
+          </figcaption>
+        </figure>
       </div>
+
+      <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
 
       <form id="fuse-form" class="board" autocomplete="off">
         <div class="terminal a">
@@ -103,6 +128,58 @@
         <h2 class="section-title"><span>02</span>Parts catalog <small>things that held current</small></h2>
         <div class="parts" id="gallery"><p class="mute">Loading parts…</p></div>
       </section>
+
+      <section class="use" id="use">
+        <h2 class="section-title"><span>03</span>Use ReaFuse <small>by hand, or from your agent</small></h2>
+        <div class="use-tabs" role="tablist" aria-label="Who is using ReaFuse">
+          <button role="tab" id="tab-people" aria-controls="use-people" aria-selected="true">For people</button>
+          <button role="tab" id="tab-agents" aria-controls="use-agents" aria-selected="false" tabindex="-1">For AI agents</button>
+        </div>
+
+        <div class="use-panel" id="use-people" role="tabpanel" aria-labelledby="tab-people">
+          <ol class="howto">
+            <li>
+              <code>01</code><h3>Name two apps</h3>
+              <p>Type them into Terminal A and B. App names (<em>Spotify</em>), websites (<em>instagram.com</em>) and GitHub repos (<em>vercel/ms</em>) all work.</p>
+            </li>
+            <li>
+              <code>02</code><h3>Throw the switch, pick one</h3>
+              <p>ReaFuse finds open-source twins, dissects both and proposes three new creatures. You choose which one grows. You get a live link, and you can close the tab.</p>
+            </li>
+            <li>
+              <code>03</code><h3>Take it home</h3>
+              <p>Every creature arrives tested, with a report of what came from which app. Preview it, read the code, or download the ZIP.</p>
+            </li>
+          </ol>
+          <div class="code-card">
+            <div class="code-head"><span>Prefer your own machine? Free, no account needed</span><button type="button" class="copy" data-copy="cmd-people">Copy</button></div>
+<pre id="cmd-people">git clone https://github.com/sickpyramid/ReaFuse
+cd ReaFuse && npm install && npm link
+reafuse fuse Spotify Instagram</pre>
+          </div>
+        </div>
+
+        <div class="use-panel" id="use-agents" role="tabpanel" aria-labelledby="tab-agents" hidden>
+          <div class="agent-grid">
+            <article class="code-card wide">
+              <div class="code-head"><span><b>A.</b> Hand this to any agent with web access</span><button type="button" class="copy" data-copy="agent-prompt">Copy prompt</button></div>
+<pre id="agent-prompt"></pre>
+            </article>
+            <article class="code-card">
+              <div class="code-head"><span><b>B.</b> MCP: your agent is the brain</span><button type="button" class="copy" data-copy="cmd-mcp">Copy</button></div>
+<pre id="cmd-mcp">claude mcp add reafuse -- node /path/to/ReaFuse/bin/reafuse.mjs mcp</pre>
+              <p class="code-note">Tools: <code>reafuse_fuse</code> starts a run, <code>reafuse_answer</code> returns each stage's JSON, <code>reafuse_pick</code> chooses a creature. Runs on your machine with your own model.</p>
+            </article>
+            <article class="code-card">
+              <div class="code-head"><span><b>C.</b> CLI and skill</span><button type="button" class="copy" data-copy="cmd-cli">Copy</button></div>
+<pre id="cmd-cli">reafuse fuse Spotify Instagram --brain auto --pick 1
+reafuse resume &lt;run-id&gt;
+reafuse doctor</pre>
+              <p class="code-note">Brains: <code>auto</code>, <code>kilo</code> (free, no account), <code>claude-cli</code>, <code>hybrid</code>, <code>handoff</code>. Agent skill: <a href="https://github.com/sickpyramid/ReaFuse/blob/main/skills/reafuse/SKILL.md" target="_blank" rel="noopener">skills/reafuse/SKILL.md ↗</a></p>
+            </article>
+          </div>
+        </div>
+      </section>
     </section>
 
     <!-- RUN ──────────────────────────────────────────────── -->
@@ -110,51 +187,118 @@
       <div class="run-head">
         <a href="/" class="back">← New fuse</a>
         <h1 class="run-title"><span class="ta" id="run-a">A</span><span class="times">×</span><span class="tb" id="run-b">B</span></h1>
-        <code class="run-id" id="run-id"></code>
       </div>
 
-      <ol class="circuit" id="rail">
-        <li data-stage="intake"><i></i><span>Intake</span></li>
-        <li data-stage="dissect-a"><i></i><span>Dissect A</span></li>
-        <li data-stage="dissect-b"><i></i><span>Dissect B</span></li>
-        <li data-stage="fuse"><i></i><span>Fuse</span></li>
-        <li data-stage="pick"><i></i><span>Pick</span></li>
-        <li data-stage="contract"><i></i><span>Contract</span></li>
-        <li data-stage="grow"><i></i><span>Grow</span></li>
-        <li data-stage="verify"><i></i><span>Verify</span></li>
-        <li data-stage="originality"><i></i><span>Originality</span></li>
-        <li data-stage="verdict"><i></i><span>Verdict</span></li>
-      </ol>
-
-      <div class="bench">
-        <div class="tape">
-          <div class="tape-head"><span><i class="rec"></i>LAB TAPE</span><span class="elapsed" id="elapsed">00:00</span></div>
-          <pre id="log" aria-live="polite"></pre>
+      <!-- Reactor: the fuse doubles as the progress bar -->
+      <div class="reactor" id="reactor" data-progress="0">
+        <svg class="reactor-fuse" viewBox="0 0 640 140" aria-hidden="true">
+          <path class="r-lead a" d="M0 70H170"/>
+          <path class="r-lead b" d="M470 70H640"/>
+          <rect x="170" y="38" width="48" height="64" rx="5" class="r-cap"/>
+          <rect x="422" y="38" width="48" height="64" rx="5" class="r-cap"/>
+          <rect x="218" y="48" width="204" height="44" class="r-glass"/>
+          <rect x="218" y="48" width="0" height="44" class="r-heat" id="r-heat"/>
+          <path class="r-filament" d="M218 70h22l10-14 12 28 12-28 12 28 12-28 12 28 12-28 12 28 12-28 12 28 12-28 12 28 10-14h22"/>
+        </svg>
+        <div class="reactor-read">
+          <div class="pct" id="r-pct">0%</div>
+          <div class="now" id="r-now">Queued…</div>
+          <div class="eta" id="r-eta"></div>
         </div>
-        <aside class="sheets" id="donor-cards"></aside>
+        <div class="reactor-actions">
+          <button type="button" class="ghost" id="copy-link">Copy link</button>
+          <button type="button" class="ghost" id="notify-me">Notify me when done</button>
+        </div>
       </div>
 
-      <section id="pick" class="pick" hidden>
-        <h2 class="section-title"><span>⏚</span>Select one output</h2>
-        <div class="concepts" id="concepts"></div>
-      </section>
+      <ol class="stages" id="rail"></ol>
+
+      <details class="nerd">
+        <summary><i class="rec"></i>Lab tape <span class="mute">(raw log)</span><span class="elapsed" id="elapsed">00:00</span></summary>
+        <pre id="log" aria-live="polite"></pre>
+      </details>
 
       <section id="verdict" class="verdict" hidden>
-        <div class="verdict-top">
-          <div class="stamp" id="banner"></div>
-          <div class="verdict-info" id="verdict-info"></div>
+        <div class="done-grid">
+          <div class="done-left">
+            <div class="done-title">
+              <div class="stamp" id="banner"></div>
+              <div>
+                <h2 class="c-name" id="c-name"></h2>
+                <p class="c-tag" id="c-tag"></p>
+              </div>
+            </div>
+
+            <svg class="lineage-graphic" viewBox="0 0 520 170" role="img" aria-labelledby="lg-title">
+              <title id="lg-title">How the two apps were fused</title>
+              <path class="lg-wire a" d="M150 46 C 215 46, 205 85, 250 85"/>
+              <path class="lg-wire b" d="M150 124 C 215 124, 205 85, 250 85"/>
+              <path class="lg-wire out" d="M330 85 H 366"/>
+              <g class="lg-node a"><rect x="6" y="24" width="144" height="44" rx="6"/><text x="78" y="51" id="lg-a">A</text></g>
+              <g class="lg-node b"><rect x="6" y="102" width="144" height="44" rx="6"/><text x="78" y="129" id="lg-b">B</text></g>
+              <g class="lg-fuse"><rect x="250" y="67" width="18" height="36" rx="3"/><rect x="312" y="67" width="18" height="36" rx="3"/><rect x="268" y="74" width="44" height="22" class="glass"/><path d="M268 85h6l3-6 4 12 4-12 4 12 4-12 3 6h4"/></g>
+              <g class="lg-node out"><rect x="366" y="58" width="148" height="54" rx="27"/><text x="440" y="90" id="lg-c">creature</text></g>
+            </svg>
+
+            <div class="kpis" id="stats"></div>
+            <ul class="donor-line" id="donor-line"></ul>
+
+            <div class="verdict-actions">
+              <a class="btn primary" id="dl-zip" href="#" download>Download ZIP</a>
+              <button type="button" class="btn" id="share">Share</button>
+              <a class="btn" id="fuse-again" href="/">Fuse again</a>
+            </div>
+            <div class="cert" id="cert"></div>
+          </div>
+
+          <div class="done-right">
+            <section class="try" id="try" hidden>
+              <div class="phone-fit" id="phone-fit">
+                <div class="phone" id="phone">
+                  <span class="phone-btn left"></span><span class="phone-btn right"></span>
+                  <div class="phone-screen">
+                    <div class="phone-status"><span id="phone-clock">9:41</span><span class="phone-island"></span><span class="phone-icons">▮▮▮ ◔</span></div>
+                    <iframe id="try-frame" title="Creature preview" sandbox="allow-scripts"></iframe>
+                    <div class="phone-home"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="try-foot"><span class="try-dot"></span><b id="try-name"></b><span class="mute">running live</span><a class="try-open" id="try-open" target="_blank" rel="noopener">Full screen ↗</a></div>
+            </section>
+            <div class="try-empty" id="try-empty" hidden>No live preview for this creature. Download it to run it locally.</div>
+          </div>
         </div>
-        <div class="stats" id="stats"></div>
-        <div class="tabs" role="tablist">
-          <button type="button" data-tab="report" class="on">Report</button>
-          <button type="button" data-tab="files">Files</button>
-        </div>
-        <div class="tab" id="tab-report"><article class="md" id="report"></article></div>
-        <div class="tab" id="tab-files" hidden>
-          <div class="files"><ul id="file-list"></ul><pre id="file-view" class="code">Select a file.</pre></div>
-        </div>
+
+        <details class="fold" id="made">
+          <summary>How it was made</summary>
+          <ol class="made-list" id="made-list"></ol>
+        </details>
+        <details class="fold">
+          <summary>Report, files &amp; donors</summary>
+          <div class="tabs" role="tablist">
+            <button type="button" data-tab="report" class="on">Report</button>
+            <button type="button" data-tab="files">Files</button>
+            <button type="button" data-tab="donors">Donors</button>
+          </div>
+          <div class="tab" id="tab-report"><article class="md" id="report"></article></div>
+          <div class="tab" id="tab-files" hidden>
+            <div class="files"><ul id="file-list"></ul><pre id="file-view" class="code">Select a file.</pre></div>
+          </div>
+          <div class="tab" id="tab-donors" hidden><div class="sheets" id="donor-cards"></div></div>
+        </details>
       </section>
+      <code class="run-id" id="run-id"></code>
     </section>
+
+    <!-- PICK: full-screen moment -->
+    <div class="picker" id="pick" hidden role="dialog" aria-modal="true" aria-labelledby="pick-title">
+      <div class="picker-inner">
+        <p class="picker-kicker">⚡ Fusion complete: three creatures can be born</p>
+        <h2 id="pick-title">Choose what to build</h2>
+        <div class="concepts" id="concepts"></div>
+        <p class="mute picker-note">The lab writes tests first, then grows your pick from scratch and verifies it.</p>
+      </div>
+    </div>
   </main>
 
   <footer class="foot">
@@ -162,6 +306,8 @@
     <span>Learns behavior, never copies code · MIT</span>
   </footer>
 
-  <script src="/app.js" type="module"></script>
+  <script src="/app.js?v=1792051284" type="module"></script>
+  <script src="/home.js?v=1792051284" type="module"></script>
+  <script src="/reactor.js?v=1792051284" type="module"></script>
 </body>
 </html>
